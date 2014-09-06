@@ -1,0 +1,293 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		7D0ADFA819A84C450015FBA6 /* gg.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7D0ADFA619A84C450015FBA6 /* gg.cpp */; };
+		7D0ADFAA19A84C5A0015FBA6 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7D0ADFA919A84C5A0015FBA6 /* main.cpp */; };
+		7D0ADFB319A84C820015FBA6 /* oculus.frag in Resources */ = {isa = PBXBuildFile; fileRef = 7D0ADFB119A84C820015FBA6 /* oculus.frag */; };
+		7D0ADFB419A84C820015FBA6 /* oculus.vert in Resources */ = {isa = PBXBuildFile; fileRef = 7D0ADFB219A84C820015FBA6 /* oculus.vert */; };
+		7D0ADFB819A88A8A0015FBA6 /* dem.csv in Resources */ = {isa = PBXBuildFile; fileRef = 7D0ADFB719A88A8A0015FBA6 /* dem.csv */; };
+		7D0ADFBA19A88A8F0015FBA6 /* texture.png in Resources */ = {isa = PBXBuildFile; fileRef = 7D0ADFB919A88A8F0015FBA6 /* texture.png */; };
+		7D6E023E19B62298009D084E /* Window.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7D6E023D19B62298009D084E /* Window.cpp */; };
+		7D7AF85F1222C8CC003A0434 /* opengl.icns in Resources */ = {isa = PBXBuildFile; fileRef = 7D7AF85E1222C8CC003A0434 /* opengl.icns */; };
+		7DB69ADC19A89A850040A535 /* simple.frag in Resources */ = {isa = PBXBuildFile; fileRef = 7DB69ADA19A89A850040A535 /* simple.frag */; };
+		7DB69ADD19A89A850040A535 /* simple.vert in Resources */ = {isa = PBXBuildFile; fileRef = 7DB69ADB19A89A850040A535 /* simple.vert */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		7D0ADFA619A84C450015FBA6 /* gg.cpp */ = {isa = PBXFileReference; fileEncoding = 8; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = gg.cpp; sourceTree = "<group>"; };
+		7D0ADFA719A84C450015FBA6 /* gg.h */ = {isa = PBXFileReference; fileEncoding = 8; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = gg.h; sourceTree = "<group>"; };
+		7D0ADFA919A84C5A0015FBA6 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 8; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = main.cpp; sourceTree = "<group>"; };
+		7D0ADFB119A84C820015FBA6 /* oculus.frag */ = {isa = PBXFileReference; fileEncoding = 8; lastKnownFileType = sourcecode.glsl; lineEnding = 0; path = oculus.frag; sourceTree = "<group>"; };
+		7D0ADFB219A84C820015FBA6 /* oculus.vert */ = {isa = PBXFileReference; fileEncoding = 8; lastKnownFileType = sourcecode.glsl; lineEnding = 0; path = oculus.vert; sourceTree = "<group>"; };
+		7D0ADFB719A88A8A0015FBA6 /* dem.csv */ = {isa = PBXFileReference; lastKnownFileType = text; path = dem.csv; sourceTree = "<group>"; };
+		7D0ADFB919A88A8F0015FBA6 /* texture.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = texture.png; sourceTree = "<group>"; };
+		7D0F572919AB5ABA004FA85B /* config.h */ = {isa = PBXFileReference; fileEncoding = 8; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = config.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
+		7D0F572A19AB5AC2004FA85B /* Window.h */ = {isa = PBXFileReference; fileEncoding = 8; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = Window.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
+		7D1E90EE1123E36C005E6C75 /* gsiview.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = gsiview.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		7D1E90F11123E36C005E6C75 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		7D6E023D19B62298009D084E /* Window.cpp */ = {isa = PBXFileReference; fileEncoding = 8; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = Window.cpp; sourceTree = "<group>"; };
+		7D7AF85E1222C8CC003A0434 /* opengl.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = opengl.icns; sourceTree = "<group>"; };
+		7DB69ADA19A89A850040A535 /* simple.frag */ = {isa = PBXFileReference; fileEncoding = 8; lastKnownFileType = sourcecode.glsl; lineEnding = 0; path = simple.frag; sourceTree = "<group>"; };
+		7DB69ADB19A89A850040A535 /* simple.vert */ = {isa = PBXFileReference; fileEncoding = 8; lastKnownFileType = sourcecode.glsl; lineEnding = 0; path = simple.vert; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		7D1E90EC1123E36C005E6C75 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		7D1E90D81123E2F7005E6C75 = {
+			isa = PBXGroup;
+			children = (
+				7D0F572919AB5ABA004FA85B /* config.h */,
+				7D0ADFA919A84C5A0015FBA6 /* main.cpp */,
+				7D0F572A19AB5AC2004FA85B /* Window.h */,
+				7D6E023D19B62298009D084E /* Window.cpp */,
+				7D0ADFA719A84C450015FBA6 /* gg.h */,
+				7D0ADFA619A84C450015FBA6 /* gg.cpp */,
+				7DB69ADB19A89A850040A535 /* simple.vert */,
+				7DB69ADA19A89A850040A535 /* simple.frag */,
+				7D0ADFB219A84C820015FBA6 /* oculus.vert */,
+				7D0ADFB119A84C820015FBA6 /* oculus.frag */,
+				7D0ADFB719A88A8A0015FBA6 /* dem.csv */,
+				7D0ADFB919A88A8F0015FBA6 /* texture.png */,
+				7D1E90EF1123E36C005E6C75 /* Products */,
+				7D1E90F11123E36C005E6C75 /* Info.plist */,
+				7D7AF85E1222C8CC003A0434 /* opengl.icns */,
+			);
+			sourceTree = "<group>";
+		};
+		7D1E90EF1123E36C005E6C75 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				7D1E90EE1123E36C005E6C75 /* gsiview.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		7D1E90ED1123E36C005E6C75 /* gsiview */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 7D1E90F41123E36D005E6C75 /* Build configuration list for PBXNativeTarget "gsiview" */;
+			buildPhases = (
+				7D1E90EA1123E36C005E6C75 /* Resources */,
+				7D1E90EB1123E36C005E6C75 /* Sources */,
+				7D1E90EC1123E36C005E6C75 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = gsiview;
+			productName = gsiview;
+			productReference = 7D1E90EE1123E36C005E6C75 /* gsiview.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		7D1E90DA1123E2F7005E6C75 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0510;
+			};
+			buildConfigurationList = 7D1E90DD1123E2F7005E6C75 /* Build configuration list for PBXProject "gsiview" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				English,
+				Japanese,
+				French,
+				German,
+			);
+			mainGroup = 7D1E90D81123E2F7005E6C75;
+			productRefGroup = 7D1E90EF1123E36C005E6C75 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				7D1E90ED1123E36C005E6C75 /* gsiview */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		7D1E90EA1123E36C005E6C75 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				7D7AF85F1222C8CC003A0434 /* opengl.icns in Resources */,
+				7D0ADFB419A84C820015FBA6 /* oculus.vert in Resources */,
+				7D0ADFB319A84C820015FBA6 /* oculus.frag in Resources */,
+				7DB69ADD19A89A850040A535 /* simple.vert in Resources */,
+				7DB69ADC19A89A850040A535 /* simple.frag in Resources */,
+				7D0ADFB819A88A8A0015FBA6 /* dem.csv in Resources */,
+				7D0ADFBA19A88A8F0015FBA6 /* texture.png in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		7D1E90EB1123E36C005E6C75 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				7D0ADFAA19A84C5A0015FBA6 /* main.cpp in Sources */,
+				7D6E023E19B62298009D084E /* Window.cpp in Sources */,
+				7D0ADFA819A84C450015FBA6 /* gg.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		7D1E90DB1123E2F7005E6C75 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COPY_PHASE_STRIP = NO;
+				ONLY_ACTIVE_ARCH = YES;
+			};
+			name = Debug;
+		};
+		7D1E90DC1123E2F7005E6C75 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COPY_PHASE_STRIP = YES;
+			};
+			name = Release;
+		};
+		7D1E90F21123E36D005E6C75 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				COPY_PHASE_STRIP = NO;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_MODEL_TUNING = G5;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "";
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
+					/usr/local/LibOVR/Include,
+					/usr/local/include,
+				);
+				INFOPLIST_FILE = Info.plist;
+				INSTALL_PATH = "$(HOME)/Applications";
+				LIBRARY_SEARCH_PATHS = (
+					/usr/local/LibOVR/Lib/MacOS/Debug,
+					/usr/local/lib,
+				);
+				OTHER_CFLAGS = (
+					"-fno-rtti",
+					"-D_DEBUG",
+				);
+				OTHER_CPLUSPLUSFLAGS = "$(OTHER_CFLAGS)";
+				OTHER_LDFLAGS = (
+					libglfw3_macos.a,
+					"-framework",
+					OpenGL,
+					"-framework",
+					CoreVideo,
+					"-framework",
+					IOKit,
+					"-framework",
+					Cocoa,
+					"-lopencv_core",
+					"-lopencv_highgui",
+					"-lopencv_imgproc",
+					"-lovr",
+				);
+				PREBINDING = NO;
+				PRODUCT_NAME = gsiview;
+			};
+			name = Debug;
+		};
+		7D1E90F31123E36D005E6C75 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_ENABLE_FIX_AND_CONTINUE = NO;
+				GCC_MODEL_TUNING = G5;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "";
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
+					/usr/local/LibOVR/Include,
+					/usr/local/include,
+				);
+				INFOPLIST_FILE = Info.plist;
+				INSTALL_PATH = "$(HOME)/Applications";
+				LIBRARY_SEARCH_PATHS = (
+					/usr/local/LibOVR/Lib/MacOS/Release,
+					/usr/local/lib,
+				);
+				OTHER_CFLAGS = "-fno-rtti";
+				OTHER_CPLUSPLUSFLAGS = "$(OTHER_CFLAGS)";
+				OTHER_LDFLAGS = (
+					libglfw3_macos.a,
+					"-framework",
+					OpenGL,
+					"-framework",
+					CoreVideo,
+					"-framework",
+					IOKit,
+					"-framework",
+					Cocoa,
+					"-lopencv_core",
+					"-lopencv_highgui",
+					"-lopencv_imgproc",
+					"-lovr",
+				);
+				PREBINDING = NO;
+				PRODUCT_NAME = gsiview;
+				ZERO_LINK = NO;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		7D1E90DD1123E2F7005E6C75 /* Build configuration list for PBXProject "gsiview" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				7D1E90DB1123E2F7005E6C75 /* Debug */,
+				7D1E90DC1123E2F7005E6C75 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		7D1E90F41123E36D005E6C75 /* Build configuration list for PBXNativeTarget "gsiview" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				7D1E90F21123E36D005E6C75 /* Debug */,
+				7D1E90F31123E36D005E6C75 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 7D1E90DA1123E2F7005E6C75 /* Project object */;
+}
