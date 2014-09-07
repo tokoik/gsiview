@@ -19,10 +19,10 @@ libpng や glpng を使うことも考えたのですが，めんどくさくな
 OpenCV と Oculus SDK を展開した場所にある include ディレクトリ，
 「ライブラリディレクトリ」に同じくライブラリファイルのあるディレクトリを追加してください．
 
-*インクルードディレクトリ
-    *<OpenCV を展開したディレクトリ>\opencv\build\include;<Oculus SDK を展開したディレクトリ>\OculusSDK\LibOVR\Include;
-*ライブラリディレクトリ
-    *<OpenCV を展開したディレクトリ>\opencv\build\x86\vc12\lib;<Oculus SDK を展開したディレクトリ>\OculusSDK\LibOVR\Lib\Win32;
+* インクルードディレクトリ
+    * <OpenCV を展開したディレクトリ>\opencv\build\include;<Oculus SDK を展開したディレクトリ>\OculusSDK\LibOVR\Include;
+* ライブラリディレクトリ
+    * <OpenCV を展開したディレクトリ>\opencv\build\x86\vc12\lib;<Oculus SDK を展開したディレクトリ>\OculusSDK\LibOVR\Lib\Win32;
 
 立体視表示はフルスクリーンで行う必要がありますが，
 Debug ビルドの時はフルスクリーンにしないようにしてあります．
