@@ -20,9 +20,9 @@ OpenCV と Oculus SDK を展開した場所にある include ディレクトリ�
 「ライブラリディレクトリ」に同じくライブラリファイルのあるディレクトリを追加してください．
 
 *インクルードディレクトリ
-    +<OpenCV を展開したディレクトリ>\opencv\build\include;<Oculus SDK を展開したディレクトリ>\OculusSDK\LibOVR\Include;
+    *<OpenCV を展開したディレクトリ>\opencv\build\include;<Oculus SDK を展開したディレクトリ>\OculusSDK\LibOVR\Include;
 *ライブラリディレクトリ
-    +<OpenCV を展開したディレクトリ>\opencv\build\x86\vc12\lib;<Oculus SDK を展開したディレクトリ>\OculusSDK\LibOVR\Lib\Win32;
+    *<OpenCV を展開したディレクトリ>\opencv\build\x86\vc12\lib;<Oculus SDK を展開したディレクトリ>\OculusSDK\LibOVR\Lib\Win32;
 
 立体視表示はフルスクリーンで行う必要がありますが，
 Debug ビルドの時はフルスクリーンにしないようにしてあります．
@@ -55,9 +55,9 @@ brew tap コマンドで homebrew/science を指定してください．
 やはり HomeBrew で GLFW 3 をインストールする場合は，
 brew tap コマンドで homebrew/versions を指定してください．GLFW 2 もインストールできます．
 
-   $ brew tap homebrew/versions
-   $ brew install glfw3
-   $ brew install glfw2
+    $ brew tap homebrew/versions
+    $ brew install glfw3
+    $ brew install glfw2
 
 Linux
 -----
