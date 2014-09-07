@@ -186,8 +186,8 @@ HScreenSize / 4 - LensSeparationDistance / 2 になります．
 
     // Oculus Rift のデバイスマネージャーが作成できたら情報を取得する
     if (pManager
-      &amp;&amp; (pHmd = *pManager->EnumerateDevices().CreateDevice())
-      &amp;&amp; pHmd->GetDeviceInfo(&amp;hmdInfo)
+      && (pHmd = *pManager->EnumerateDevices().CreateDevice())
+      && pHmd->GetDeviceInfo(&hmdInfo)
     )
     {
       // レンズの中心の画面の中心からのずれ
