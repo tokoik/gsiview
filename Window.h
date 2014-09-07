@@ -90,13 +90,13 @@ class Window
   //
   void updateStereoProjectionMatrix()
   {
-#  if STEREO == OCULUS
     // 視差によるスクリーンのオフセット量
+#  if STEREO == OCULUS
     const GLfloat shift(0.0f);
 #  else
-    // ディスプレイ中心位置のオフセット量
     const GLfloat shift(parallax * zNear / screenDistance);
 #  endif
+
     // 立体視用の透視投影変換行列
     mpL.loadFrustum(-scrW + shift, scrW + shift, -scrH, scrH, zNear, zFar);
     mpR.loadFrustum(-scrW - shift, scrW - shift, -scrH, scrH, zNear, zFar);
