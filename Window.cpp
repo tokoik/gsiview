@@ -58,7 +58,6 @@ Window::Window(int width, int height, const char *title, GLFWmonitor *monitor, G
   // ゲームグラフィックス特論の都合にもとづく初期化
   if (!glCreateProgram) ggInit();
 
-#if STEREO == OCULUS
   // ジョイステックの有無を調べて番号を決める
   joy = glfwJoystickPresent(count) ? count : -1;
 
@@ -78,8 +77,9 @@ Window::Window(int width, int height, const char *title, GLFWmonitor *monitor, G
     }
   }
 
+#if STEREO == OCULUS
   // プログラムオブジェクト, VAO / VBO, Oculus Rift のデバイスマネージャーの作成は最初一度だけ行う
-  if (!count++)
+  if (!count)
   {
     // Oculus Rift のレンズの歪みを補正するシェーダプログラム
     ocuProgram = ggLoadShader("oculus.vert", "oculus.frag");
@@ -204,6 +204,9 @@ Window::Window(int width, int height, const char *title, GLFWmonitor *monitor, G
       GL_RENDERBUFFER, ocuFboDepth);
   }
 #endif
+
+  // 参照カウントを増やす
+  ++count;
 
   // 投影変換行列・ビューポートを初期化する
   resize(window, width, height);
@@ -732,8 +735,8 @@ const GLenum Window::ocuFboDrawBuffers[] = { GL_COLOR_ATTACHMENT0 };
 
 // Oculus Rift のヘッドトラッキングセンサ
 Ptr<DeviceManager> Window::pManager;
+#  endif
+#endif
 
 // 参照カウント
 unsigned int Window::count(0);
-#  endif
-#endif

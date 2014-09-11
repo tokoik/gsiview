@@ -155,10 +155,10 @@ class Window
   Ptr<SensorDevice> pSensor;
   HMDInfo hmdInfo;
   SensorFusion sensorFusion;
+#endif
 
   // 参照カウント
   static unsigned int count;
-#endif
 
   //
   // コピーコンストラクタ (コピー禁止)
