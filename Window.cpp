@@ -205,11 +205,11 @@ Window::Window(int width, int height, const char *title, GLFWmonitor *monitor, G
   }
 #endif
 
-  // 参照カウントを増やす
-  ++count;
-
   // 投影変換行列・ビューポートを初期化する
   resize(window, width, height);
+
+  // 参照カウントを増す
+  ++count;
 }
 
 //
@@ -217,9 +217,12 @@ Window::Window(int width, int height, const char *title, GLFWmonitor *monitor, G
 //
 Window::~Window()
 {
+  // 参照カウントを減じる
+  --count;
+
 #if STEREO == OCULUS
   // プログラムオブジェクト, VAO / VBO, Oculus Rift のデバイスマネージャーは最後に削除する
-  if (--count)
+  if (count)
   {
     // プログラムオブジェクトの削除
     glDeleteProgram(ocuProgram);
