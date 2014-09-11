@@ -252,7 +252,7 @@ int main()
   glDisable(GL_CULL_FACE);
 
   // 背景色を設定する
-  glClearColor(0.2f, 0.3f, 0.4f, 0.0f);
+  glClearColor(back[0], back[1], back[2], back[3]);
 
   // 描画用のシェーダプログラムを読み込む
   GgSimpleShader simple("simple.vert", "simple.frag");

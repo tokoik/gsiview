@@ -76,3 +76,6 @@ const GgSimpleShader::Material material =
 
 // 境界色 (Oculus Rift 表示時の表示範囲外の色)
 const GLfloat border[] = { 0.0, 0.0, 0.0, 0.0 };
+
+// 背景色
+const GLfloat back[] = { 0.2f, 0.3f, 0.4f, 0.0f };
