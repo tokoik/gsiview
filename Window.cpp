@@ -230,10 +230,6 @@ Window::~Window()
     // VAO の削除
     glDeleteBuffers(1, &ocuVbo);
     glDeleteVertexArrays(1, &ocuVao);
-
-    // Oculus Rift のデバイスマネージャーの削除
-    pManager->Release();
-    System::Destroy();
   }
 
   // FBO の削除
