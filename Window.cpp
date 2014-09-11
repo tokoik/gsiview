@@ -79,7 +79,7 @@ Window::Window(int width, int height, const char *title, GLFWmonitor *monitor, G
 
 #if STEREO == OCULUS
   // プログラムオブジェクト, VAO / VBO, Oculus Rift のデバイスマネージャーの作成は最初一度だけ行う
-  if (!count)
+  if (count == 0)
   {
     // Oculus Rift のレンズの歪みを補正するシェーダプログラム
     ocuProgram = ggLoadShader("oculus.vert", "oculus.frag");
@@ -222,7 +222,7 @@ Window::~Window()
 
 #if STEREO == OCULUS
   // プログラムオブジェクト, VAO / VBO, Oculus Rift のデバイスマネージャーは最後に削除する
-  if (count)
+  if (count == 0)
   {
     // プログラムオブジェクトの削除
     glDeleteProgram(ocuProgram);
