@@ -26,7 +26,9 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
 #if defined(_WIN32)
-//#  pragma comment(linker, "/subsystem:\"windows\" /entry:\"mainCRTStartup\"")
+#  if !defined(_DEBUG)
+#    pragma comment(linker, "/subsystem:\"windows\" /entry:\"mainCRTStartup\"")
+#  endif
 #  pragma warning(disable:4996)
 #  ifdef _DEBUG
 #    pragma comment(lib, "glfw3debug.lib")
@@ -4163,7 +4165,7 @@ namespace gg
     float sx, sy;                           // マウスの絶対位置→ウィンドウ内での相対位置の換算係数
     GgQuaternion cq;                        // 回転の初期値 (四元数)
     GgQuaternion tq;                        // ドラッグ中の回転 (四元数)
-    GLfloat rt[16];                         // 回転の変換行列
+    GgMatrix rt;                            // 回転の変換行列
 
   public:
 
@@ -4200,12 +4202,23 @@ namespace gg
     //!   \param y 現在のマウスの y 座標.
     void stop(float x, float y);
 
+    //! \brief トラックボールの回転角を修正する
+    //!   \param q 修正分の回転角の四元数
+    void rotate(const GgQuaternion &q);
+
     //! \brief トラックボールをリセットする
     void reset();
 
     //! \brief 現在の回転の変換行列を取り出す.
     //!   \return 回転の変換を表す GLfloat[16] 型の配列.
     const GLfloat *get() const
+    {
+      return rt.get();
+    }
+
+    //! \brief 現在の回転の変換行列を取り出す.
+    //!   \return 回転の変換を表す GgMatrix 型の変換行列.
+    const GgMatrix &getMatrix() const
     {
       return rt;
     }

@@ -61,11 +61,11 @@
 				7DB69ADA19A89A850040A535 /* simple.frag */,
 				7D0ADFB219A84C820015FBA6 /* oculus.vert */,
 				7D0ADFB119A84C820015FBA6 /* oculus.frag */,
-				7D0ADFB719A88A8A0015FBA6 /* dem.csv */,
-				7D0ADFB919A88A8F0015FBA6 /* texture.png */,
 				7D1E90EF1123E36C005E6C75 /* Products */,
 				7D1E90F11123E36C005E6C75 /* Info.plist */,
 				7D7AF85E1222C8CC003A0434 /* opengl.icns */,
+				7D0ADFB719A88A8A0015FBA6 /* dem.csv */,
+				7D0ADFB919A88A8F0015FBA6 /* texture.png */,
 			);
 			sourceTree = "<group>";
 		};

@@ -6739,6 +6739,27 @@ void gg::GgTrackball::stop(float x, float y)
 }
 
 /*
+** 簡易トラックボール処理：回転角の修正
+**
+**   現在の回転角を修正する
+**   q: 修正分の回転角を表す四元数
+*/
+void gg::GgTrackball::rotate(const GgQuaternion &q)
+{
+  if (!drag)
+  {
+    // 保存されている四元数に修正分の四元数を掛けて合成する
+    tq = q * cq;
+
+    // 合成した四元数から回転の変換行列を求める
+    tq.getMatrix(rt);
+
+    // 誤差を吸収するために正規化しておく
+    cq = tq.normalize();
+  }
+}
+
+/*
 ** ポイント：描画
 */
 void gg::GgPoints::draw(GLint first, GLsizei count) const

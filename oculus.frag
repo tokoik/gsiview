@@ -27,9 +27,10 @@ void main()
   vec2 tc = t * dot(r, lensDistortion);
   fc = texture(ocuFboColor, tc * lensScale * 0.5 + 0.5);
 #else
+  // 色収差補正のテスト
   vec2 tr = t * dot(r, lensDistortion);
-  vec2 tg = t * dot(r, lensDistortion + vec4(0.0, 0.05, 0.04, 0.0));
-  vec2 tb = t * dot(r, lensDistortion + vec4(0.0, 0.1, 0.08, 0.0));
+  vec2 tg = t * dot(r, lensDistortion - vec4(0.0, 0.02, 0.024, 0.0));
+  vec2 tb = t * dot(r, lensDistortion - vec4(0.0, 0.04, 0.048, 0.0));
   fc.r = texture(ocuFboColor, tr * lensScale * 0.5 + 0.5).r;
   fc.g = texture(ocuFboColor, tg * lensScale * 0.5 + 0.5).g;
   fc.b = texture(ocuFboColor, tb * lensScale * 0.5 + 0.5).b;
