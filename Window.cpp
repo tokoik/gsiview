@@ -26,7 +26,7 @@ Window::Window(int width, int height, const char *title, GLFWmonitor *monitor, G
   , parallax(initialParallax)
 #endif
 #if STEREO != OCULUS
-  , scrH(zNear * displayCenter / displayDepth)
+  , scrH(zNear * screenCenter / screenDistance)
 #endif
 {
   if (!window) return;

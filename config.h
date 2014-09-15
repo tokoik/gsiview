@@ -17,14 +17,13 @@ using namespace gg;
 #define OCULUS        5                                 // Oculus Rift (HMD)
 
 // 立体視の方式
-#define STEREO        NONE
+#define STEREO        OCULUS
 
 // 立体視特有のパラメータ
 #if STEREO != NONE
 const int useSecondary(1);                              // 1 ならセカンダリモニタに表示
 const GLfloat initialParallax(0.032f);                  // 視差の初期値 (単位 m)
 const GLfloat parallaxStep(0.001f);                     // 視差の変更ステップ (単位 m)
-const GLfloat screenDistance(2.0f);                     // 実際のスクリーンまでの距離 (単位 m)
 
 // Oculus Rift 固有のパラメータ
 #  if STEREO == OCULUS
@@ -41,10 +40,10 @@ const char texfile[] = "texture.png";                   // 地図のテクスチャ
 const GLsizei texWidth(2048), texHeight(2048);          // テクスチャメモリのサイズ
 #define USE_ANISOTROPIC_FILTERING 1                     // 1 なら非対称フィルタリング拡張機能を使う
 
-// カメラの初期状態
+// カメラの初期状態 (単位 m)
 const GLfloat startPosition[] = { 0.0f, 0.0f, 20.0f };  // カメラの初期位置
-const GLfloat displayCenter(0.5f);                      // ディスプレイの中心位置 (高さの半分
-const GLfloat displayDepth(1.5f);                       // 観測者とディスプレイ面との距離
+const GLfloat screenCenter(0.5f);                       // ディスプレイの中心位置 (高さの半分)
+const GLfloat screenDistance(1.5f);                     // 観測者とディスプレイ面との距離
 const GLfloat zNear(0.1f);                              // 前方面までの距離
 const GLfloat zFar(50.0f);                              // 後方面までの距離
 
