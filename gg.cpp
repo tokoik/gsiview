@@ -6610,8 +6610,9 @@ gg::GgQuaternion &gg::GgQuaternion::loadConjugate(const GgQuaternion &q)
 {
   // ²ƒxƒNƒgƒ‹‚ğ”½“]‚·‚é
   array[0] = -q.array[0];
-  array[0] = -q.array[1];
-  array[0] = -q.array[2];
+  array[1] = -q.array[1];
+  array[2] = -q.array[2];
+  array[3] =  q.array[3];
 
   return *this;
 }

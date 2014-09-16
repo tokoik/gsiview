@@ -43,7 +43,7 @@ namespace
     if (!file) return 0;
 
     // メッシュの分割数
-    unsigned int slices, stacks(0);
+    unsigned int slices(0), stacks(0);
 
     // 高さデータの格納先
     std::vector<GLfloat> height;
@@ -56,12 +56,13 @@ namespace
       ++stacks;
 
       // 実数値を一つ読み取る
-      slices = 0;
       GLfloat h;
-      while (sline >> h)
+      for (slices = 0; sline >> h;)
       {
         // データを保存する
         height.push_back(h);
+
+	// 読み込んだ数値の数を数える
         ++slices;
 
         // コンマ／行末文字を読み飛ばす
