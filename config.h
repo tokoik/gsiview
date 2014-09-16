@@ -49,7 +49,7 @@ const GLfloat zFar(50.0f);                              // 後方面までの距離
 
 // ナビゲーションの速度調整
 const GLfloat speedScale(0.00002f);                     // フレームあたりの移動速度係数
-const GLfloat angleScale(0.00001f);                     // フレームあたりの回転速度係数
+const GLfloat angleScale(0.00002f);                     // フレームあたりの回転速度係数
 #if defined(__APPLE__)
 const GLfloat wheelXStep(0.001f);                       // Magic Mouse の X 方向の係数
 const GLfloat wheelYStep(0.001f);                       // Magic Mouse の Y 方向の係数
@@ -57,9 +57,9 @@ const GLfloat wheelYStep(0.001f);                       // Magic Mouse の Y 方向
 const GLfloat wheelXStep(0.005f);                       // マウスホイールの X 方向の係数
 const GLfloat wheelYStep(0.005f);                       // マウスホイールの Y 方向の係数
 #endif
-const GLfloat axesSpeedScale(0.010f);                   // ゲームパッドのスティックの速度の係数
-const GLfloat axesAngleScale(0.010f);                   // ゲームパッドのスティックの角速度の係数
-const GLfloat btnsScale(0.005f);                        // ゲームパッドのボタンの係数
+const GLfloat axesSpeedScale(0.01f);                    // ゲームパッドのスティックの速度の係数
+const GLfloat axesAngleScale(0.01f);                    // ゲームパッドのスティックの角速度の係数
+const GLfloat btnsScale(0.01f);                         // ゲームパッドのボタンの係数
 
 // 光源
 const GgSimpleShader::Light light =
