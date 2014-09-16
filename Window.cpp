@@ -344,11 +344,14 @@ void Window::swapBuffers()
   double x, y;
   glfwGetCursorPos(window, &x, &y);
 
+  // 速度を高度に比例させる
+  const double factor((fabs(ez) * 0.5f + 1.0f));
+
   // 左ボタンドラッグ
   if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_1))
   {
     // カメラの位置を移動する
-    GLfloat speed(speedScale * GLfloat(cy - y));
+    GLfloat speed(GLfloat(cy - y) * speedScale * factor);
     ex += speed * sin(direction);
     ey += speed * cos(direction);
 
@@ -386,17 +389,17 @@ void Window::swapBuffers()
     if (axesCount > 3 + axesOffset)
     {
       // カメラを前後に移動する
-      GLfloat advSpeed((axes[1] - origin[1]) * axesSpeedScale);
+      GLfloat advSpeed((axes[1] - origin[1]) * axesSpeedScale * factor);
       ex -= advSpeed * sin(direction);
       ey -= advSpeed * cos(direction);
 
       // カメラを左右に移動する
-      GLfloat latSpeed((axes[2 + axesOffset] - origin[2]) * axesSpeedScale);
+      GLfloat latSpeed((axes[2 + axesOffset] - origin[2]) * axesSpeedScale * factor);
       ey -= latSpeed * sin(direction);
       ex += latSpeed * cos(direction);
 
       // カメラを上下に移動する
-      ez -= (axes[3 + axesOffset] - origin[3]) * axesSpeedScale * (fabs(ez) * 0.5f + 1.0f);
+      ez -= (axes[3 + axesOffset] - origin[3]) * axesSpeedScale * factor;
 
       // カメラの進行方向を更新する
       direction += (axes[0] - origin[0]) * axesAngleScale;

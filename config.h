@@ -48,11 +48,11 @@ const GLfloat zNear(0.1f);                              // 前方面までの距離
 const GLfloat zFar(50.0f);                              // 後方面までの距離
 
 // ナビゲーションの速度調整
-const GLfloat speedScale(0.00005f);                     // フレームあたりの移動速度係数
+const GLfloat speedScale(0.00002f);                     // フレームあたりの移動速度係数
 const GLfloat angleScale(0.00001f);                     // フレームあたりの回転速度係数
 const GLfloat heightStep(0.005f);                       // カメラの高さの調整係数
-const GLfloat axesSpeedScale(0.020f);                   // ゲームパッドのスティックの速度の係数
-const GLfloat axesAngleScale(0.005f);                   // ゲームパッドのスティックの角速度の係数
+const GLfloat axesSpeedScale(0.010f);                   // ゲームパッドのスティックの速度の係数
+const GLfloat axesAngleScale(0.010f);                   // ゲームパッドのスティックの角速度の係数
 const GLfloat btnsScale(0.005f);                        // ゲームパッドのボタンの係数
 
 // 光源
