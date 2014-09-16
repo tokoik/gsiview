@@ -6556,7 +6556,7 @@ void gg::GgQuaternion::slerp(GLfloat *p, const GLfloat *q, const GLfloat *r, GLf
 */
 gg::GgQuaternion &gg::GgQuaternion::loadRotate(GLfloat x, GLfloat y, GLfloat z, GLfloat a)
 {
-  GLfloat l(x * x + y * y + z * z);
+  const GLfloat l(x * x + y * y + z * z);
 
   if (l != 0.0)
   {
@@ -6591,9 +6591,9 @@ gg::GgQuaternion &gg::GgQuaternion::loadNormalize(const GgQuaternion &q)
   // ƒmƒ‹ƒ€‚ğ‹‚ß‚é
   const GLfloat l(q.norm());
 
-  // ƒmƒ‹ƒ€‚ÅŠe—v‘f‚ğŠ„‚é
   if (l > 0.0f)
   {
+    // ƒmƒ‹ƒ€‚ÅŠe—v‘f‚ğŠ„‚é
     array[0] = q.array[0] / l;
     array[1] = q.array[1] / l;
     array[2] = q.array[2] / l;
@@ -6625,13 +6625,13 @@ gg::GgQuaternion &gg::GgQuaternion::loadInvert(const GgQuaternion &q)
   // ƒmƒ‹ƒ€‚Ì“ñæ‚ğ‹‚ß‚é
   const GLfloat l(q.array[0] * q.array[0] + q.array[1] * q.array[1] + q.array[2] * q.array[2] + q.array[3] * q.array[3]);
 
-  // ‹¤–ğlŒ³”‚ğ‹‚ß‚é
-  GgQuaternion r;
-  r.loadConjugate(q);
-
-  // ƒmƒ‹ƒ€‚Ì“ñæ‚ÅŠ„‚é
   if (l > 0.0f)
   {
+    // ‹¤–ğlŒ³”‚ğ‹‚ß‚é
+    GgQuaternion r;
+    r.loadConjugate(q);
+
+    // ƒmƒ‹ƒ€‚Ì“ñæ‚ÅŠ„‚é
     array[0] = r.array[0] / l;
     array[1] = r.array[1] / l;
     array[2] = r.array[2] / l;
