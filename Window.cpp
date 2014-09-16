@@ -4,11 +4,11 @@
 #include <iostream>
 #include "Window.h"
 
-// ジョイスティックを Mac につなぐと右側のスティックの番号が一つずれる
-#ifdef __APPLE__
-const int appleOffset(1);
+// Mac と Linux ではジョイスティックの右側のスティックの番号が一つずれる
+#if defined(__APPLE__) || defined(X11)
+const int axesOffset(1);
 #else
-const int appleOffset(0);
+const int axesOffset(0);
 #endif
 
 //
@@ -67,13 +67,13 @@ Window::Window(int width, int height, const char *title, GLFWmonitor *monitor, G
     int axesCount;
     const float *const axes(glfwGetJoystickAxes(joy, &axesCount));
 
-    if (axesCount > 3 + appleOffset)
+    if (axesCount > 3 + axesOffset)
     {
       // 起動直後のスティックの位置を基準にする
       origin[0] = axes[0];
       origin[1] = axes[1];
-      origin[2] = axes[2 + appleOffset];
-      origin[3] = axes[3 + appleOffset];
+      origin[2] = axes[2 + axesOffset];
+      origin[3] = axes[3 + axesOffset];
     }
   }
 
@@ -383,7 +383,7 @@ void Window::swapBuffers()
     int axesCount;
     const float *const axes(glfwGetJoystickAxes(joy, &axesCount));
 
-    if (axesCount > 3 + appleOffset)
+    if (axesCount > 3 + axesOffset)
     {
       // カメラを前後に移動する
       GLfloat advSpeed((axes[1] - origin[1]) * axesSpeedScale);
@@ -391,18 +391,17 @@ void Window::swapBuffers()
       ey -= advSpeed * cos(direction);
 
       // カメラを左右に移動する
-      GLfloat latSpeed((axes[2 + appleOffset] - origin[2]) * axesSpeedScale);
+      GLfloat latSpeed((axes[2 + axesOffset] - origin[2]) * axesSpeedScale);
       ey -= latSpeed * sin(direction);
       ex += latSpeed * cos(direction);
 
       // カメラを上下に移動する
-      ez -= (axes[3 + appleOffset] - origin[3]) * axesSpeedScale * (fabs(ez) * 0.5f + 1.0f);
+      ez -= (axes[3 + axesOffset] - origin[3]) * axesSpeedScale * (fabs(ez) * 0.5f + 1.0f);
 
       // カメラの進行方向を更新する
       direction += (axes[0] - origin[0]) * axesAngleScale;
     }
 
-#if STEREO != OCULUS
     // ボタン
     int btnsCount;
     const unsigned char *const btns(glfwGetJoystickButtons(joy, &btnsCount));
@@ -417,7 +416,6 @@ void Window::swapBuffers()
 
     // カメラの方位角を正面に戻す
     if (btnsCount > 4 && btns[4] > 0) heading = 0.0f;
-#  endif
   }
 
 #if STEREO != NONE

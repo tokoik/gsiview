@@ -4,7 +4,8 @@ HEADERS	= $(wildcard *.h)
 OBJECTS	= $(patsubst %.cpp,%.o,$(SOURCES))
 LIBOCV	= /usr/local
 LIBOVR	= /usr/local/LibOVR
-CXXFLAGS	= --std=c++0x -g -Wall -DX11 -I$(LIBOCV)/include -I$(LIBOVR)/Include -Dnullptr=NULL -D_DEBUG
+DEBUG	= -D_DEBUG
+CXXFLAGS	= --std=c++0x -g -Wall -DX11 -I$(LIBOCV)/include -I$(LIBOVR)/Include -Dnullptr=NULL $(DEBUG)
 LDLIBS	= -lGL -lglfw3 -lXi -lXrandr -lXxf86vm -lX11 -lrt -lpthread -lpng -ludev -lm -L$(LIBOCV)/lib -lopencv_core -lopencv_highgui -lopencv_imgproc -L$(LIBOVR)/Lib/Linux/Debug/i386 -lovr
 
 .PHONY: clean
