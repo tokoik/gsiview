@@ -30,7 +30,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #    pragma comment(linker, "/subsystem:\"windows\" /entry:\"mainCRTStartup\"")
 #  endif
 #  pragma warning(disable:4996)
-#  ifdef _DEBUG
+#  if defined(_DEBUG)
 #    pragma comment(lib, "glfw3debug.lib")
 #  else
 #    pragma comment(lib, "glfw3.lib")

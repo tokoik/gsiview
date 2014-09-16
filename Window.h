@@ -12,15 +12,15 @@
 
 // Oculus Rift SDK ƒ‰ƒCƒuƒ‰ƒŠ (LibOVR) ‚Ì‘g‚İ‚İ
 #if STEREO == OCULUS
-#  ifdef _WIN32
-#    ifdef _DEBUG
+#  if defined(_WIN32)
+#    if defined(_DEBUG)
 #      pragma comment(lib, "libovrd.lib")
 #    else
 #      pragma comment(lib, "libovr.lib")
 #    endif
 #    pragma comment(lib, "winmm.lib")
 #  endif
-#  ifdef APIENTRY
+#  if defined(APIENTRY)
 #    undef APIENTRY
 #  endif
 #  include <OVRVersion.h>

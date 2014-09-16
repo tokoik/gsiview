@@ -5,11 +5,11 @@
 // OpenCV の組み込み
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
-#ifdef _WIN32
+#if defined(_WIN32)
 #  include <windows.h>
 #  define _USE_MATH_DEFINES
 #  define CV_VERSION_STR CVAUX_STR(CV_MAJOR_VERSION) CVAUX_STR(CV_MINOR_VERSION) CVAUX_STR(CV_SUBMINOR_VERSION)
-#  ifdef _DEBUG
+#  if defined(_DEBUG)
 #    define CV_EXT_STR "d.lib"
 #  else
 #    define CV_EXT_STR ".lib"
@@ -92,16 +92,16 @@ namespace
         const unsigned int kjp = j < stacks ? k + slices + 1 : k;
 
         // 位置
-        position.push_back(GLfloat(i) * 2.0f / GLfloat(slices) - 1.0f);
-        position.push_back(1.0f - GLfloat(j) * 2.0f / GLfloat(stacks));
+        position.push_back(static_cast<GLfloat>(i) * 2.0f / static_cast<GLfloat>(slices) - 1.0f);
+        position.push_back(1.0f - static_cast<GLfloat>(j) * 2.0f / static_cast<GLfloat>(stacks));
         position.push_back(height[k]);
 
         // 法線
         const GLfloat n[] =
         {
-          (height[kim] - height[kip]) / GLfloat(stacks),
-          (height[kjp] - height[kjm]) / GLfloat(slices),
-          2.0f / (GLfloat(slices) * GLfloat(stacks))
+          (height[kim] - height[kip]) / static_cast<GLfloat>(stacks),
+          (height[kjp] - height[kjm]) / static_cast<GLfloat>(slices),
+          2.0f / (static_cast<GLfloat>(slices * stacks))
         };
 
         // 法線ベクトルを正規化して登録する
@@ -151,7 +151,7 @@ namespace
     GLuint positionBuffer;
     glGenBuffers(1, &positionBuffer);
     glBindBuffer(GL_ARRAY_BUFFER, positionBuffer);
-    glBufferData(GL_ARRAY_BUFFER, position.size() * sizeof(GLfloat), &position[0], GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, position.size() * sizeof (GLfloat), &position[0], GL_STATIC_DRAW);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
     glEnableVertexAttribArray(0);
 
@@ -159,7 +159,7 @@ namespace
     GLuint normalBuffer;
     glGenBuffers(1, &normalBuffer);
     glBindBuffer(GL_ARRAY_BUFFER, normalBuffer);
-    glBufferData(GL_ARRAY_BUFFER, normal.size() * sizeof(GLfloat), &normal[0], GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, normal.size() * sizeof (GLfloat), &normal[0], GL_STATIC_DRAW);
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
     glEnableVertexAttribArray(1);
 
@@ -167,7 +167,7 @@ namespace
     GLuint indexBuffer;
     glGenBuffers(1, &indexBuffer);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, index.size() * sizeof(GLuint), &index[0], GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, index.size() * sizeof (GLuint), &index[0], GL_STATIC_DRAW);
 
     // インデックスの数を返す
     *count = index.size();
@@ -193,7 +193,7 @@ int main()
   if (glfwInit() == GL_FALSE)
   {
     // GLFW の初期化に失敗した
-#ifdef _WIN32
+#if defined(_WIN32)
     MessageBox(NULL, TEXT("GLFW の初期化に失敗しました。"), TEXT("すまんのう"), MB_OK);
 #else
     std::cerr << "Can't initialize GLFW" << std::endl;
@@ -236,7 +236,7 @@ int main()
   if (!window.get())
   {
     // ウィンドウが作成できなかった
-#ifdef _WIN32
+#if defined(_WIN32)
     MessageBox(NULL, TEXT("GLFW のウィンドウが開けませんでした。"), TEXT("すまんのう"), MB_OK);
 #else
     std::cerr << "Can't open GLFW window" << std::endl;
@@ -265,7 +265,7 @@ int main()
   if (mesh == 0)
   {
     // 地形データが読み込めなかった
-#ifdef _WIN32
+#if defined(_WIN32)
     MessageBox(NULL, TEXT("データファイルの読み込みに失敗しました。"), TEXT("すまんのう"), MB_OK);
 #else
     std::cerr << "Can't read data file: " << demfile << std::endl;

@@ -5,10 +5,10 @@
 #include "Window.h"
 
 // Mac と Linux ではジョイスティックの右側のスティックの番号が一つずれる
-#if defined(__APPLE__) || defined(X11)
-const int axesOffset(1);
-#else
+#if defined(_WIN32)
 const int axesOffset(0);
+#else
+const int axesOffset(1);
 #endif
 
 //
@@ -109,7 +109,7 @@ Window::Window(int width, int height, const char *title, GLFWmonitor *monitor, G
     && pHmd->GetDeviceInfo(&hmdInfo)
     )
   {
-#  ifdef _DEBUG
+#  if defined(_DEBUG)
     // 取得した情報を表示する
     std::cout << hmdInfo.DisplayDeviceName << std::endl;
     std::cout << "\nResolution:"
@@ -351,20 +351,20 @@ void Window::swapBuffers()
   if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_1))
   {
     // カメラの位置を移動する
-    GLfloat speed(GLfloat(cy - y) * speedScale * factor);
+    const GLfloat speed(static_cast<GLfloat>(cy - y) * speedScale * factor);
     ex += speed * sin(direction);
     ey += speed * cos(direction);
 
     // カメラの進行方向を変える
-    direction += angleScale * GLfloat(x - cx);
+    direction += angleScale * static_cast<GLfloat>(x - cx);
   }
 
   // 右ボタンドラッグ
   if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_2))
   {
     // マウスボタンを押した位置からの変位
-    GLfloat dx(GLfloat(x - cx));
-    GLfloat dy(GLfloat(y - cy));
+    const GLfloat dx(static_cast<GLfloat>(x - cx));
+    const GLfloat dy(static_cast<GLfloat>(y - cy));
 
     // 移動量の大きい方だけ変更する方が扱いやすい気がする
     if (fabs(dx) > fabs(dy))
@@ -389,12 +389,12 @@ void Window::swapBuffers()
     if (axesCount > 3 + axesOffset)
     {
       // カメラを前後に移動する
-      GLfloat advSpeed((axes[1] - origin[1]) * axesSpeedScale * factor);
+      const GLfloat advSpeed((axes[1] - origin[1]) * axesSpeedScale * factor);
       ex -= advSpeed * sin(direction);
       ey -= advSpeed * cos(direction);
 
       // カメラを左右に移動する
-      GLfloat latSpeed((axes[2 + axesOffset] - origin[2]) * axesSpeedScale * factor);
+      const GLfloat latSpeed((axes[2 + axesOffset] - origin[2]) * axesSpeedScale * factor);
       ey -= latSpeed * sin(direction);
       ex += latSpeed * cos(direction);
 
@@ -411,16 +411,17 @@ void Window::swapBuffers()
     if (btnsCount > 3)
     {
       // カメラの仰角を調整する
-      pitch += btnsScale * GLfloat(btns[2] - btns[1]);
+      pitch += btnsScale * static_cast<GLfloat>(btns[2] - btns[1]);
 
       // カメラの方位角を調整する
-      heading += btnsScale * GLfloat(btns[3] - btns[0]);
+      heading += btnsScale * static_cast<GLfloat>(btns[3] - btns[0]);
     }
 
     // カメラの方位角を正面に戻す
     if (btnsCount > 4 && btns[4] > 0) heading = 0.0f;
   }
 
+  
 #if STEREO != NONE
   // 左矢印キー操作
   if (glfwGetKey(window, GLFW_KEY_LEFT))
@@ -437,7 +438,7 @@ void Window::swapBuffers()
       parallax -= parallaxStep;
       updateStereoProjectionMatrix();
     }
-# else
+#  else
     // 視差を縮小する
     parallax -= parallaxStep;
     updateStereoProjectionMatrix();
@@ -459,7 +460,7 @@ void Window::swapBuffers()
       parallax += parallaxStep;
       updateStereoProjectionMatrix();
     }
-# else
+#  else
     // 視差を拡大する
     parallax += parallaxStep;
     updateStereoProjectionMatrix();
@@ -499,7 +500,7 @@ void Window::resize(GLFWwindow *window, int width, int height)
   {
 #if STEREO != OCULUS
     // ディスプレイのアスペクト比 w / h からスクリーンの幅を求める
-    instance->scrW = instance->scrH * GLfloat(width) / GLfloat(height);
+    instance->scrW = instance->scrH * static_cast<GLfloat>(width) / static_cast<GLfloat>(height);
 #endif
 
 #if STEREO == SIDEBYSIDE || STEREO == OCULUS
@@ -578,20 +579,15 @@ void Window::wheel(GLFWwindow *window, double x, double y)
     if (fabs(x) > fabs(y))
     {
       // カメラを左右に移動する
-#ifdef __APPLE__
-      GLfloat latSpeed((fabs(instance->ez) + 1.0f) * heightStep * GLfloat(x));
-      instance->ey += latSpeed * sin(instance->direction);
-      instance->ex -= latSpeed * cos(instance->direction);
-#else
-      GLfloat latSpeed((fabs(instance->ez) + 1.0f) * 5.0f * heightStep * GLfloat(x));
+      const GLfloat latSpeed((fabs(instance->ez) * 5.0f + 1.0f) * wheelXStep * static_cast<GLfloat>(x));
       instance->ey -= latSpeed * sin(instance->direction);
       instance->ex += latSpeed * cos(instance->direction);
-#endif
     }
     else
     {
       // カメラを上下に移動する
-      instance->ez += (fabs(instance->ez) * 5.0f + 1.0f) * heightStep * GLfloat(y);
+      const GLfloat advSpeed((fabs(instance->ez) * 5.0f + 1.0f) * wheelYStep * static_cast<GLfloat>(y));
+      instance->ez += advSpeed;
     }
   }
 }

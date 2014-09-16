@@ -17,7 +17,7 @@ using namespace gg;
 #define OCULUS        5                                 // Oculus Rift (HMD)
 
 // 立体視の方式
-#define STEREO        OCULUS
+#define STEREO        NONE
 
 // 立体視特有のパラメータ
 #if STEREO != NONE
@@ -50,7 +50,13 @@ const GLfloat zFar(50.0f);                              // 後方面までの距離
 // ナビゲーションの速度調整
 const GLfloat speedScale(0.00002f);                     // フレームあたりの移動速度係数
 const GLfloat angleScale(0.00001f);                     // フレームあたりの回転速度係数
-const GLfloat heightStep(0.005f);                       // カメラの高さの調整係数
+#if defined(__APPLE__)
+const GLfloat wheelXStep(0.001f);                       // Magic Mouse の X 方向の係数
+const GLfloat wheelYStep(0.001f);                       // Magic Mouse の Y 方向の係数
+#else
+const GLfloat wheelXStep(0.005f);                       // マウスホイールの X 方向の係数
+const GLfloat wheelYStep(0.005f);                       // マウスホイールの Y 方向の係数
+#endif
 const GLfloat axesSpeedScale(0.010f);                   // ゲームパッドのスティックの速度の係数
 const GLfloat axesAngleScale(0.010f);                   // ゲームパッドのスティックの角速度の係数
 const GLfloat btnsScale(0.005f);                        // ゲームパッドのボタンの係数

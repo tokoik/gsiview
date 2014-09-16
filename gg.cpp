@@ -5465,7 +5465,7 @@ bool gg::ggLoadObj(const char *name, GLuint &ng, GLuint (*&group)[2],
     else if (op == "usemtl")
     {
       // 面グループの面数
-      GLuint groupcount(GLuint(tface.size()) * 3 - groupbegin);
+      GLuint groupcount(static_cast<GLuint>(tface.size()) * 3 - groupbegin);
       if (groupcount > 0)
       {
         // 面グループの頂点データの開始番号と数，およびそのマテリアルを記録する
@@ -5569,7 +5569,7 @@ bool gg::ggLoadObj(const char *name, GLuint &ng, GLuint (*&group)[2],
   else
   {
     // 最後の面グループの面数
-    GLuint groupcount(GLuint(tface.size()) * 3 - groupbegin);
+    GLuint groupcount(static_cast<GLuint>(tface.size()) * 3 - groupbegin);
     if (groupcount > 0)
     {
       // 最後の面グループの頂点データの開始番号と数，およびそのマテリアルを記録する
@@ -5580,7 +5580,7 @@ bool gg::ggLoadObj(const char *name, GLuint &ng, GLuint (*&group)[2],
   file.close();
 
   // 必要な面数
-  const GLuint nf(GLuint(tface.size()));
+  const GLuint nf(static_cast<GLuint>(tface.size()));
 
   // メモリの確保
   try
@@ -5593,7 +5593,7 @@ bool gg::ggLoadObj(const char *name, GLuint &ng, GLuint (*&group)[2],
     norm = new GLfloat[nv][3];
 
     // 必要なグループ数
-    ng = GLuint(tgroup.size());
+    ng = static_cast<GLuint>(tgroup.size());
     group = nullptr;
     amb = diff = spec = nullptr;
     shi = nullptr;
@@ -5852,7 +5852,7 @@ static GLboolean printShaderInfoLog(GLuint shader, const char *str)
     std::cerr << &infoLog[0] << std::endl;
   }
 
-  return (GLboolean)status;
+  return static_cast<GLboolean>(status);
 }
 
 /*
@@ -5879,7 +5879,7 @@ static GLboolean printProgramInfoLog(GLuint program)
   }
 
   // リンク結果を返す
-  return (GLboolean)status;
+  return static_cast<GLboolean>(status);
 }
 
 /*!
@@ -5982,7 +5982,7 @@ static GLchar *readShaderSource(const char *name)
 
   // ファイルの末尾に移動し現在位置（＝ファイルサイズ）を得る
   file.seekg(0L, std::ios::end);
-  const GLsizei length(GLsizei(file.tellg()));
+  const GLsizei length(static_cast<GLsizei>(file.tellg()));
 
   // ファイルサイズのメモリを確保する
   GLchar *buffer(new(std::nothrow) GLchar[length + 1]);
