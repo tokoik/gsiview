@@ -2,12 +2,12 @@ TARGET	= gsiview
 SOURCES	= $(wildcard *.cpp)
 HEADERS	= $(wildcard *.h)
 OBJECTS	= $(patsubst %.cpp,%.o,$(SOURCES))
-LIBOCV	= /usr/local
 LIBOVR	= /usr/local/LibOVR
+LIBOCV	= /usr/local
 DEBUG	= -g -D_DEBUG
 #DEBUG	= -O3
-CXXFLAGS	= --std=c++0x -Wall $(DEBUG) -Dnullptr=NULL -DX11 -I$(LIBOCV)/include -I$(LIBOVR)/Include
-LDLIBS	= -lGL -lglfw3 -lXi -lXrandr -lXxf86vm -lX11 -lrt -lpthread -lpng -ludev -lm -L$(LIBOCV)/lib -lopencv_core -lopencv_highgui -lopencv_imgproc -L$(LIBOVR)/Lib/Linux/Debug/i386 -lovr
+CXXFLAGS	= --std=c++0x -Wall $(DEBUG) -Dnullptr=NULL -DX11 -I$(LIBOVR)/Include -I$(LIBOCV)/include
+LDLIBS	= -lGL -lglfw3 -lXi -lXrandr -lXxf86vm -lX11 -lrt -lpthread -lm -ludev -lpng -L$(LIBOVR)/Lib/Linux/Debug/i386 -lovr -L$(LIBOCV)/lib -lopencv_core -lopencv_highgui -lopencv_imgproc
 
 .PHONY: clean
 
