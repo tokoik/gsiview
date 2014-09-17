@@ -336,19 +336,19 @@ int main()
 
 #if STEREO == NONE
     // 単眼のモデルビュープロジェクション変換行列を設定する
-    simple.loadMatrix(window.getMp(), window.getMv() * mm);
+    simple.loadMatrix(window.getMp(), window.getMw() * mm);
 
     // 描画
     glDrawElements(GL_TRIANGLES, count, GL_UNSIGNED_INT, 0);
 #else
     // 左目のモデルビュープロジェクション変換行列を設定する
-    simple.loadMatrix(window.getMpL(), window.getMvL() * mm);
+    simple.loadMatrix(window.getMpL(), window.getMwL() * mm);
 
     // 描画
     glDrawElements(GL_TRIANGLES, count, GL_UNSIGNED_INT, 0);
 
     // 右目のモデルビュープロジェクション変換行列を設定する
-    simple.loadMatrix(window.getMpR(), window.getMvR() * mm);
+    simple.loadMatrix(window.getMpR(), window.getMwR() * mm);
 
     // 描画
     glDrawElements(GL_TRIANGLES, count, GL_UNSIGNED_INT, 0);

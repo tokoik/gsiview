@@ -252,7 +252,7 @@ public:
   //
   // モデルビュー変換行列を得る
   //
-  const GgMatrix &getMv() const
+  const GgMatrix &getMw() const
   {
     return mv;
   }
@@ -270,7 +270,7 @@ public:
   //
   //   ・左目の描画特有の処理を行う
   //
-  GgMatrix getMvL() const;
+  GgMatrix getMwL() const;
 
   //
   // 左目用のプロジェクション変換行列を得る
@@ -285,7 +285,7 @@ public:
   //
   //   ・右目の描画特有の処理を行う
   //
-  GgMatrix getMvR() const;
+  GgMatrix getMwR() const;
 
   //
   // 右目用のプロジェクション変換行列を得る

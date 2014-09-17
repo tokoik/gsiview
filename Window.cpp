@@ -424,7 +424,6 @@ void Window::swapBuffers()
     if (btnsCount > 4 && btns[4] > 0) heading = 0.0f;
   }
 
-  
 #if STEREO != NONE
   // 左矢印キー操作
   if (glfwGetKey(window, GLFW_KEY_LEFT))
@@ -650,7 +649,7 @@ void Window::keyboard(GLFWwindow *window, int key, int scancode, int action, int
 //
 //   ・左目の描画特有の処理を行う
 //
-GgMatrix Window::getMvL() const
+GgMatrix Window::getMwL() const
 {
 #  if STEREO == LINEBYLINE
   // 偶数番目の走査線だけに描画する
@@ -681,7 +680,7 @@ GgMatrix Window::getMvL() const
 //
 //   ・右目の描画特有の処理を行う
 //
-GgMatrix Window::getMvR() const
+GgMatrix Window::getMwR() const
 {
 #  if STEREO == LINEBYLINE
   // 奇数番目の走査線だけに描画する
