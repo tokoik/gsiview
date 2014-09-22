@@ -23,6 +23,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 **
 */
 
+// 標準ライブラリ
 #include <cmath>
 #include <cfloat>
 #include <cstdlib>
@@ -34,6 +35,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <map>
 #include <algorithm>
 
+// クラス定義
 #include "gg.h"
 
 #if defined(_WIN32)
@@ -5166,8 +5168,8 @@ bool gg::ggLoadObj(const char *name, GLuint &nv, GLfloat (*&pos)[3], GLfloat (*&
   // メモリの確保
   pos = norm = nullptr;
   face = nullptr;
-  nv = tpos.size();
-  nf = tface.size();
+  nv = static_cast<GLuint>(tpos.size());
+  nf = static_cast<GLuint>(tface.size());
   try
   {
     pos = new GLfloat[nv][3];
@@ -5707,7 +5709,7 @@ bool gg::ggLoadObj(const char *name, GLuint &ng, GLuint (*&group)[2],
         }
 
         // 3 頂点追加
-        const size_t v(tnorm.size());
+        const GLuint v(static_cast<GLuint>(tnorm.size()));
         tnorm.resize(v + 3);
 
         // 正規化した面法線をそのまま頂点法線にする
@@ -5732,7 +5734,7 @@ bool gg::ggLoadObj(const char *name, GLuint &ng, GLuint (*&group)[2],
   // 面ごとの頂点データの作成
   for (std::vector<idx>::const_iterator it = tface.begin(); it != tface.end(); ++it)
   {
-    const size_t f((it - tface.begin()) * 3);
+    const GLuint f(static_cast<GLuint>((it - tface.begin()) * 3));
 
     // 三頂点のそれぞれについて
     for (int i = 0; i < 3; ++i)
@@ -6658,10 +6660,10 @@ void gg::GgTrackball::reset()
   drag = false;
 
   // 単位クォーターニオンで初期化する
-  cq.loadIdentity();
+  tq = cq.loadIdentity();
 
   // 回転行列を初期化する
-  cq.getMatrix(rt);
+  tq.getMatrix(rt);
 }
 
 /*
@@ -6722,24 +6724,6 @@ void gg::GgTrackball::motion(float x, float y)
 }
 
 /*
-** 簡易トラックボール処理：停止時の処理
-**
-**   マウスボタンを離したときに実行する
-**   (x, y): 現在のマウス位置
-*/
-void gg::GgTrackball::stop(float x, float y)
-{
-  // ドラッグ終了点における回転を求める
-  motion(x, y);
-
-  // 現在の回転を表す四元数を正規化して保存する
-  cq = tq.normalize();
-
-  // ドラッグ終了
-  drag = false;
-}
-
-/*
 ** 簡易トラックボール処理：回転角の修正
 **
 **   現在の回転角を修正する
@@ -6755,9 +6739,27 @@ void gg::GgTrackball::rotate(const GgQuaternion &q)
     // 合成した四元数から回転の変換行列を求める
     tq.getMatrix(rt);
 
-    // 誤差を吸収するために正規化しておく
+    // 誤差を吸収するために正規化して保存する
     cq = tq.normalize();
   }
+}
+
+/*
+** 簡易トラックボール処理：停止時の処理
+**
+**   マウスボタンを離したときに実行する
+**   (x, y): 現在のマウス位置
+*/
+void gg::GgTrackball::stop(float x, float y)
+{
+  // ドラッグ終了点における回転を求める
+  motion(x, y);
+
+  // 誤差を吸収するために正規化して保存する
+  cq = tq.normalize();
+
+  // ドラッグ終了
+  drag = false;
 }
 
 /*
@@ -7095,7 +7097,7 @@ gg::GgElements *gg::ggElementsMesh(int slices, int stacks, const GLfloat (*pos)[
 
   // GgElements オブジェクトを作成する
   return new GgElements((slices + 1) * (stacks + 1), pos, norm,
-    f.size() / 3, reinterpret_cast<GLuint (*)[3]>(&f[0]), GL_TRIANGLES);
+    static_cast<GLuint>(f.size()) / 3, reinterpret_cast<GLuint (*)[3]>(&f[0]), GL_TRIANGLES);
 }
 
 /*!

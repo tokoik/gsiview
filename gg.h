@@ -26,14 +26,16 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
 #if defined(_WIN32)
-#  if !defined(_DEBUG)
-#    pragma comment(linker, "/subsystem:\"windows\" /entry:\"mainCRTStartup\"")
-#  endif
 #  pragma warning(disable:4996)
 #  if defined(_DEBUG)
-#    pragma comment(lib, "glfw3debug.lib")
+#    define GLFW3_EXT_STR "d.lib"
 #  else
-#    pragma comment(lib, "glfw3.lib")
+#    define GLFW3_EXT_STR ".lib"
+#  endif
+#  if defined(_WIN64)
+#    pragma comment(lib, "glfw3-64" GLFW3_EXT_STR)
+#  else
+#    pragma comment(lib, "glfw3" GLFW3_EXT_STR)
 #  endif
 #  pragma comment(lib, "opengl32.lib")
 #  include "glfw3.h"
@@ -2730,11 +2732,11 @@ namespace gg
     GgMatrix &loadTranslate(GLfloat x, GLfloat y, GLfloat z, GLfloat w = 1.0f);
 
     //! \brief 平行移動の変換行列を格納する.
-    //!   \param t 移動量の GLfloat[4] 型の配列 (x, y, z, w).
+    //!   \param t 移動量の GLfloat 型の配列 (x, y, z).
     //!   \return 設定した変換行列.
     GgMatrix &loadTranslate(const GLfloat *t)
     {
-      return loadTranslate(t[0], t[1], t[2], t[3]);
+      return loadTranslate(t[0], t[1], t[2]);
     }
 
     //! \brief 拡大縮小の変換行列を格納する.
@@ -2746,11 +2748,11 @@ namespace gg
     GgMatrix &loadScale(GLfloat x, GLfloat y, GLfloat z, GLfloat w = 1.0f);
 
     //! \brief 拡大縮小の変換行列を格納する.
-    //!   \param s 拡大率の GLfloat[4] 型の配列 (x, y, z, w).
+    //!   \param s 拡大率の GLfloat 型の配列 (x, y, z).
     //!   \return 設定した変換行列.
     GgMatrix &loadScale(const GLfloat *s)
     {
-      return loadScale(s[0], s[1], s[2], s[3]);
+      return loadScale(s[0], s[1], s[2]);
     }
 
     //! \brief x 軸中心の回転の変換行列を格納する.
@@ -3128,7 +3130,7 @@ namespace gg
   }
 
   //! \brief 平行移動の変換行列を返す.
-  //!   \param t 移動量の GLfloat[4] 型の配列 (x, y, z, w).
+  //!   \param t 移動量の GLfloa 型の配列 (x, y, z).
   //!   \return 平行移動の変換行列
   inline GgMatrix ggTranslate(const GLfloat *t)
   {
@@ -3149,7 +3151,7 @@ namespace gg
   }
 
   //! \brief 拡大縮小の変換行列を返す.
-  //!   \param s 拡大率の GLfloat[4] 型の配列 (x, y, z, w).
+  //!   \param s 拡大率の GLfloat 型の配列 (x, y, z).
   //!   \return 拡大縮小の変換行列.
   inline GgMatrix ggScale(const GLfloat *s)
   {
@@ -3763,11 +3765,35 @@ namespace gg
     }
 
     //! \brief (v[0], v[1], v[2]) を軸として角度 v[3] 回転する四元数を格納する.
-    //!   \param v 軸ベクトルを表す GLfloat[4] 型の配列.
+    //!   \param a 回転角.
     //!   \return 格納された回転を表す四元数.
     GgQuaternion &loadRotate(const GLfloat *v)
     {
       return loadRotate(v[0], v[1], v[2], v[3]);
+    }
+
+    //! \brief x 軸中心に角度 a 回転する四元数を格納する.
+    //!   \param a 回転角.
+    //!   \return 格納された回転を表す四元数.
+    GgQuaternion &loadRotateX(GLfloat a)
+    {
+      return loadRotate(1.0f, 0.0f, 0.0f, a);
+    }
+
+    //! \brief y 軸中心に角度 a 回転する四元数を格納する.
+    //!   \param a 回転角.
+    //!   \return 格納された回転を表す四元数.
+    GgQuaternion &loadRotateY(GLfloat a)
+    {
+      return loadRotate(0.0f, 1.0f, 0.0f, a);
+    }
+
+    //! \brief z 軸中心に角度 a 回転する四元数を格納する.
+    //!   \param v 軸ベクトルを表す GLfloat[4] 型の配列.
+    //!   \return 格納された回転を表す四元数.
+    GgQuaternion &loadRotateZ(GLfloat a)
+    {
+      return loadRotate(0.0f, 0.0f, 1.0f, a);
     }
 
     //! \brief 四元数を (x, y, z) を軸として角度 a 回転した四元数を返す.
@@ -3797,6 +3823,30 @@ namespace gg
     GgQuaternion rotate(const GLfloat *v) const
     {
       return rotate(v[0], v[1], v[2], v[3]);
+    }
+
+    //! \brief 四元数を x 軸中心に角度 a 回転した四元数を返す.
+    //!   \param a 回転角.
+    //!   \return 回転した四元数.
+    GgQuaternion rotateX(GLfloat a) const
+    {
+      return rotate(1.0f, 0.0f, 0.0f, a);
+    }
+
+    //! \brief 四元数を y 軸中心に角度 a 回転した四元数を返す.
+    //!   \param a 回転角.
+    //!   \return 回転した四元数.
+    GgQuaternion rotateY(GLfloat a) const
+    {
+      return rotate(0.0f, 1.0f, 0.0f, a);
+    }
+
+    //! \brief 四元数を z 軸中心に角度 a 回転した四元数を返す.
+    //!   \param a 回転角.
+    //!   \return 回転した四元数.
+    GgQuaternion rotateZ(GLfloat a) const
+    {
+      return rotate(0.0f, 0.0f, 1.0f, a);
     }
 
     //! \brief オイラー角 (heading, pitch, roll) で与えられた回転を表す四元数を格納する.
@@ -3948,18 +3998,27 @@ namespace gg
       a[3] = array[3];
     }
 
-    //! \brief 四元数が表す回転の行列を a に求める.
+    //! \brief 四元数が表す回転の変換行列を a に求める.
     //!   \param a 回転の変換行列を格納する GLfloat[16] 型の配列.
     void getMatrix(GLfloat *a) const
     {
       toMatrix(a, array);
     }
 
-    //! \brief 四元数が表す回転の行列を m に求める.
+    //! \brief 四元数が表す回転の変換行列を m に求める.
     //!   \param m 回転の変換行列を格納する GgMatrix 型の変数.
     void getMatrix(GgMatrix &m) const
     {
       toMatrix(m.array, array);
+    }
+
+    //! \brief 四元数が表す回転の変換行列を取り出す.
+    //!   \return 回転の変換を表す GgMatrix 型の変換行列.
+    GgMatrix getMatrix() const
+    {
+      GgMatrix m;
+      toMatrix(m.array, array);
+      return m;
     }
   };
 
@@ -4196,15 +4255,15 @@ namespace gg
     //!   \param y 現在のマウスの y 座標.
     void motion(float x, float y);
 
+    //! \brief トラックボールの回転角を修正する.
+    //!   \param q 修正分の回転角の四元数.
+    void rotate(const GgQuaternion &q);
+
     //! \brief トラックボール処理を停止する.
     //!   \brief マウスのドラッグ終了時 (マウスボタンを離したとき) に呼び出す.
     //!   \param x 現在のマウスの x 座標.
     //!   \param y 現在のマウスの y 座標.
     void stop(float x, float y);
-
-    //! \brief トラックボールの回転角を修正する
-    //!   \param q 修正分の回転角の四元数
-    void rotate(const GgQuaternion &q);
 
     //! \brief トラックボールをリセットする
     void reset();
