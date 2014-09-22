@@ -171,7 +171,7 @@ namespace
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, index.size() * sizeof (GLuint), &index[0], GL_STATIC_DRAW);
 
     // インデックスの数を返す
-    *count = index.size();
+    *count = static_cast<GLsizei>(index.size());
     return vao;
   }
 
