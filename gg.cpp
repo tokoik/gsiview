@@ -4595,7 +4595,7 @@ bool gg::ggSaveTga(GLsizei sx, GLsizei sy, unsigned int depth,
   std::ofstream file(name, std::ios::binary);
 
   // ファイルが開けなかったら戻る
-  if (file.fail())
+  if (!file)
   {
     std::cerr << "Waring: Can't open file: " << name << std::endl;
     return false;
@@ -4623,9 +4623,10 @@ bool gg::ggSaveTga(GLsizei sx, GLsizei sy, unsigned int depth,
   // ヘッダを書き込む
   file.write(reinterpret_cast<const char *>(header), sizeof header);
 
-  // ヘッダの書き込みに失敗したら戻る
+  // ヘッダの書き込みチェック
   if (file.bad())
   {
+    // ヘッダの書き込みに失敗した
     std::cerr << "Waring: Can't write file header: " << name << std::endl;
     file.close();
     return 0;
@@ -4638,10 +4639,10 @@ bool gg::ggSaveTga(GLsizei sx, GLsizei sy, unsigned int depth,
   static const char footer[] = "\0\0\0\0\0\0\0\0TRUEVISION-XFILE.";
   file.write(footer, sizeof footer);
 
-  // 書き込みチェック
+  // データの書き込みチェック
   if (file.bad())
   {
-    // 書き込みに失敗した
+    // データの書き込みに失敗した
     std::cerr << "Waring: Can't write image data: " << name << std::endl;
   }
 
@@ -4720,7 +4721,7 @@ GLubyte *gg::ggLoadTga(const char *name, GLsizei *width, GLsizei *height, GLenum
   std::ifstream file(name, std::ios::binary);
 
   // ファイルが開けなかったら戻る
-  if (file.fail())
+  if (!file)
   {
     std::cerr << "Waring: Can't open file: " << name << std::endl;
     return nullptr;
@@ -5095,7 +5096,7 @@ bool gg::ggLoadObj(const char *name, GLuint &nv, GLfloat (*&pos)[3], GLfloat (*&
   std::ifstream file(name, std::ios::binary);
 
   // ファイルが開けなかったら戻る
-  if (file.fail())
+  if (!file)
   {
     std::cerr << "Error: Can't open OBJ file: " << name << std::endl;
     return false;
@@ -5314,7 +5315,7 @@ bool gg::ggLoadObj(const char *name, GLuint &ng, GLuint (*&group)[2],
   std::ifstream file(path.c_str());
 
   // 読み込みに失敗したら戻る
-  if (file.fail())
+  if (!file)
   {
     std::cerr << "Error: Can't open OBJ file: " << path << std::endl;
     return false;
