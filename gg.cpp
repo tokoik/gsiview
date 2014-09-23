@@ -5501,10 +5501,11 @@ bool gg::ggLoadObj(const char *name, GLuint &ng, GLuint (*&group)[2],
       std::getline(str, mtlpath);
       mtlpath = dirname + mtlpath;
 
-      // MTL ファイルの読み込み
+      // MTL ファイルを開く
       std::ifstream mtlfile(mtlpath.c_str(), std::ios::binary);
-      if (mtlfile.fail())
+      if (!mtlfile)
       {
+        // MTL ファイルが無いとき
         std::cerr << "Warning: Can't open MTL file: " << mtlpath << std::endl;
       }
       else
@@ -5977,7 +5978,7 @@ static GLchar *readShaderSource(const char *name)
   std::ifstream file(name, std::ios::binary);
 
   // ファイルが開けなければ戻る
-  if (file.fail())
+  if (!file)
   {
     std::cerr << "Error: Can't open source file: " << name << std::endl;
     return nullptr;
