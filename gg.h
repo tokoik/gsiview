@@ -31,6 +31,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #    define GLFW3_EXT_STR "d.lib"
 #  else
 #    define GLFW3_EXT_STR ".lib"
+#    pragma comment(linker, "/subsystem:\"windows\" /entry:\"mainCRTStartup\"")
 #  endif
 #  if defined(_WIN64)
 #    pragma comment(lib, "glfw3-64" GLFW3_EXT_STR)
