@@ -6340,43 +6340,41 @@ gg::GgMatrix &gg::GgMatrix::loadLookat(GLfloat ex, GLfloat ey, GLfloat ez,
   GLfloat ux, GLfloat uy, GLfloat uz)
 {
   // z é≤ = e - t
-  GLfloat zx = ex - tx;
-  GLfloat zy = ey - ty;
-  GLfloat zz = ez - tz;
-  const GLfloat zl = sqrt(zx * zx + zy * zy + zz * zz);
-  if (zl == 0.0f) return *this;
-
-  // z é≤ÇÃê≥ãKâª
-  zx /= zl;
-  zy /= zl;
-  zz /= zl;
+  const GLfloat zx(ex - tx);
+  const GLfloat zy(ey - ty);
+  const GLfloat zz(ez - tz);
 
   // x é≤ = u x z é≤
-  GLfloat xx = uy * zz - uz * zy;
-  GLfloat xy = uz * zx - ux * zz;
-  GLfloat xz = ux * zy - uy * zx;
-  const GLfloat xl = sqrt(xx * xx + xy * xy + xz * xz);
-  if (xl == 0.0f) return *this;
-
-  // x é≤ÇÃê≥ãKâª
-  xx /= xl;
-  xy /= xl;
-  xz /= xl;
-
-  // z é≤
-  array[ 2] = zx;
-  array[ 6] = zy;
-  array[10] = zz;
-
-  // x é≤
-  array[ 0] = xx;
-  array[ 4] = xy;
-  array[ 8] = xz;
+  const GLfloat xx(uy * zz - uz * zy);
+  const GLfloat xy(uz * zx - ux * zz);
+  const GLfloat xz(ux * zy - uy * zx);
 
   // y é≤ = z é≤ x x é≤
-  array[ 1] = zy * xz - zz * xy;
-  array[ 5] = zz * xx - zx * xz;
-  array[ 9] = zx * xy - zy * xx;
+  const GLfloat yx(zy * xz - zz * xy);
+  const GLfloat yy(zz * xx - zx * xz);
+  const GLfloat yz(zx * xy - zy * xx);
+
+  // y é≤ÇÃí∑Ç≥ÇÉ`ÉFÉbÉN
+  GLfloat y(yx * yx + yy * yy + yz * yz);
+  if (y == 0.0f) return *this;
+
+  // x é≤ÇÃê≥ãKâª
+  const GLfloat x(sqrt(xx * xx + xy * xy + xz * xz));
+  array[ 0] = xx / x;
+  array[ 4] = xy / x;
+  array[ 8] = xz / x;
+
+  // y é≤ÇÃê≥ãKâª
+  y = sqrt(y);
+  array[ 1] = yx / y;
+  array[ 5] = yy / y;
+  array[ 9] = yz / y;
+
+  // z é≤ÇÃê≥ãKâª
+  const GLfloat z(sqrt(zx * zx + zy * zy + zz * zz));
+  array[ 2] = zx / z;
+  array[ 6] = zy / z;
+  array[10] = zz / z;
 
   // ïΩçsà⁄ìÆ
   array[12] = -(ex * array[ 0] + ey * array[ 4] + ez * array[ 8]);
