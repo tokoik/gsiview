@@ -672,7 +672,7 @@ GgMatrix Window::getMwL() const
 #  endif
 
   // 左目を左に動かす代わりにシーンを右に動かす
-  return mv.translate(parallax, 0.0f, 0.0f);
+  return ggTranslate(parallax, 0.0f, 0.0f) * mv;
 }
 
 //
@@ -703,7 +703,7 @@ GgMatrix Window::getMwR() const
 #  endif
 
   // 右目を左に動かす代わりにシーンを左に動かす
-  return mv.translate(-parallax, 0.0f, 0.0f);
+  return ggTranslate(-parallax, 0.0f, 0.0f) * mv;
 }
 
 #  if STEREO == OCULUS
