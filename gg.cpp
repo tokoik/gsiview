@@ -6799,7 +6799,7 @@ void gg::GgElements::draw(GLint first, GLsizei count) const
 gg::GgPoints *gg::ggPointsCube(GLuint nv, GLfloat length, GLfloat cx, GLfloat cy, GLfloat cz)
 {
   // メモリを確保する
-  GLfloat (*pos)[3](new(std::nothrow) GLfloat[nv][3]);
+  GLfloat (*const pos)[3](new(std::nothrow) GLfloat[nv][3]);
 
   // メモリが確保できなければ戻る
   if (pos == nullptr) return nullptr;
@@ -6835,7 +6835,7 @@ gg::GgPoints *gg::ggPointsSphere(GLuint nv, GLfloat radius,
   GLfloat cx, GLfloat cy, GLfloat cz)
 {
   // メモリを確保する
-  GLfloat (*pos)[3](new(std::nothrow) GLfloat[nv][3]);
+  GLfloat (*const pos)[3](new(std::nothrow) GLfloat[nv][3]);
 
   // メモリが確保できなければ戻る
   if (pos == nullptr) return nullptr;
