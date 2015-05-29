@@ -7,7 +7,7 @@ LIBOCV	= /usr/local
 DEBUG	= -g -D_DEBUG
 #DEBUG	= -O3
 CXXFLAGS	= --std=c++0x -Wall $(DEBUG) -Dnullptr=NULL -DX11 -I$(LIBOVR)/Include -I$(LIBOCV)/include
-LDLIBS	= -lGL -lglfw3 -lXi -lXrandr -lXxf86vm -lX11 -lrt -lpthread -lm -ludev -lpng -L$(LIBOVR)/Lib/Linux/Debug/i386 -lovr -L$(LIBOCV)/lib -lopencv_core -lopencv_highgui -lopencv_imgproc
+LDLIBS	= -lGL -lglfw3 -lXrandr -lXinerama -lXcursor -lXxf86vm -lXi -lX11 -lpthread -lm -lpng -ludev -L$(LIBOVR)/Lib/Linux/Debug/i386 -lovr -L$(LIBOCV)/lib -lopencv_core -lopencv_highgui -lopencv_imgproc
 
 .PHONY: clean
 
