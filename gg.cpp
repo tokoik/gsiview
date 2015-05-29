@@ -4597,7 +4597,7 @@ bool gg::ggSaveTga(GLsizei sx, GLsizei sy, unsigned int depth,
   // ファイルが開けなかったら戻る
   if (!file)
   {
-    std::cerr << "Waring: Can't open file: " << name << std::endl;
+    std::cerr << "Error: Can't open file: " << name << std::endl;
     return false;
   }
 
@@ -4627,9 +4627,9 @@ bool gg::ggSaveTga(GLsizei sx, GLsizei sy, unsigned int depth,
   if (file.bad())
   {
     // ヘッダの書き込みに失敗した
-    std::cerr << "Waring: Can't write file header: " << name << std::endl;
+    std::cerr << "Error: Can't write file header: " << name << std::endl;
     file.close();
-    return 0;
+    return false;
   }
 
   // データを書き込む
@@ -4643,7 +4643,9 @@ bool gg::ggSaveTga(GLsizei sx, GLsizei sy, unsigned int depth,
   if (file.bad())
   {
     // データの書き込みに失敗した
-    std::cerr << "Waring: Can't write image data: " << name << std::endl;
+    std::cerr << "Error: Can't write image data: " << name << std::endl;
+    file.close();
+    return false;
   }
 
   // ファイルを閉じる
@@ -4723,7 +4725,7 @@ GLubyte *gg::ggLoadTga(const char *name, GLsizei *width, GLsizei *height, GLenum
   // ファイルが開けなかったら戻る
   if (!file)
   {
-    std::cerr << "Waring: Can't open file: " << name << std::endl;
+    std::cerr << "Error: Can't open file: " << name << std::endl;
     return nullptr;
   }
 
@@ -4734,7 +4736,7 @@ GLubyte *gg::ggLoadTga(const char *name, GLsizei *width, GLsizei *height, GLenum
   // ヘッダの読み込みに失敗したら戻る
   if (file.bad())
   {
-    std::cerr << "Waring: Can't read file header: " << name << std::endl;
+    std::cerr << "Error: Can't read file header: " << name << std::endl;
     file.close();
     return nullptr;
   }
@@ -4761,7 +4763,7 @@ GLubyte *gg::ggLoadTga(const char *name, GLsizei *width, GLsizei *height, GLenum
     break;
   default:
     // 取り扱えないフォーマットだったら戻る
-    std::cerr << "Waring: Unusable format: " << depth << std::endl;
+    std::cerr << "Error: Unusable format: " << depth << std::endl;
     file.close();
     return nullptr;
   }
@@ -4775,7 +4777,7 @@ GLubyte *gg::ggLoadTga(const char *name, GLsizei *width, GLsizei *height, GLenum
   // メモリが確保できなければ戻る
   if (buffer == nullptr)
   {
-    std::cerr << "Waring: Too large file: " << name << std::endl;
+    std::cerr << "Error: Too large file: " << name << std::endl;
     file.close();
     return nullptr;
   }
@@ -4878,7 +4880,7 @@ GLuint gg::ggLoadImage(const char *name, GLenum internal)
   // 画像フォーマット
   GLenum format;
 
-  // 画像がぞうを読み込む
+  // 画像を読み込む
   const GLubyte *const image(ggLoadTga(name, &width, &height, &format));
 
   // 画像が読み込めなかったら戻る
@@ -4927,7 +4929,7 @@ GLuint gg::ggLoadHeight(const char *name, float nz, GLenum internal)
   // 画像フォーマット
   GLenum format;
 
-  //高さマップの 画像を読み込む
+  //高さマップの画像を読み込む
   const GLubyte *const hmap(ggLoadTga(name, &width, &height, &format));
 
   // 画像が読み込めなかったら戻る
@@ -5164,6 +5166,8 @@ bool gg::ggLoadObj(const char *name, GLuint &nv, GLfloat (*&pos)[3], GLfloat (*&
     // うまく読み込めなかった
     std::cerr << "Warning: Can't read OBJ file: " << name << std::endl;
   }
+
+  // ファイルを閉じる
   file.close();
 
   // メモリの確保
@@ -5568,20 +5572,22 @@ bool gg::ggLoadObj(const char *name, GLuint &ng, GLuint (*&group)[2],
   if (file.bad())
   {
     // OBJ ファイルをうまく読み込めなかった
-    std::cerr << "Warning: Can't read OBJ file: " << path << std::endl;
+    std::cerr << "Error: Can't read OBJ file: " << path << std::endl;
+    file.close();
+    return false;
   }
-  else
-  {
-    // 最後の面グループの面数
-    GLuint groupcount(static_cast<GLuint>(tface.size()) * 3 - groupbegin);
-    if (groupcount > 0)
-    {
-      // 最後の面グループの頂点データの開始番号と数，およびそのマテリアルを記録する
-      grp b(groupbegin, groupcount, mtl[mtlname]);
-      tgroup.push_back(b);
-    }
-  }
+
+  // ファイルを閉じる
   file.close();
+
+  // 最後の面グループの面数
+  GLuint groupcount(static_cast<GLuint>(tface.size()) * 3 - groupbegin);
+  if (groupcount > 0)
+  {
+    // 最後の面グループの頂点データの開始番号と数，およびそのマテリアルを記録する
+    grp b(groupbegin, groupcount, mtl[mtlname]);
+    tgroup.push_back(b);
+  }
 
   // 必要な面数
   const GLuint nf(static_cast<GLuint>(tface.size()));
@@ -5900,7 +5906,7 @@ static GLboolean printProgramInfoLog(GLuint program)
 **   \return シェーダプログラムのプログラム名 (作成できなければ 0).
 */
 GLuint gg::ggCreateShader(const char *vsrc, const char *fsrc, const char *gsrc,
-  GLint nvarying, const char **varyings,
+  GLint nvarying, const char *const *varyings,
   const char *vtext, const char *ftext, const char *gtext)
 {
   // シェーダプログラムの作成
@@ -6030,7 +6036,7 @@ static GLchar *readShaderSource(const char *name)
 **   \return シェーダプログラムのプログラム名 (作成できなければ 0).
 */
 GLuint gg::ggLoadShader(const char *vert, const char *frag, const char *geom,
-  GLint nvarying, const char **varyings)
+  GLint nvarying, const char *const *varyings)
 {
   // シェーダのソースファイルを読み込む
   const GLchar *const vsrc(readShaderSource(vert));
@@ -7182,13 +7188,14 @@ gg::GgObj::~GgObj()
   delete[] diff;
   delete[] spec;
   delete[] shi;
-  delete[] data;
+  delete data;
 }
 
 /*
 ** Wavefront OBJ 形式のデータ：コンストラクタ
 */
 gg::GgObj::GgObj(const char *name, bool normalize)
+  : data(nullptr), shader(nullptr)
 {
   GLuint nv;
   GLfloat (*pos)[3], (*norm)[3];
@@ -7210,19 +7217,19 @@ gg::GgObj::GgObj(const char *name, bool normalize)
 */
 void gg::GgObj::draw(GLint first, GLsizei count) const
 {
-  // シェーダの選択
-  shader->use();
-
   // 描画するグループの数
   if (count <= 0) count = ng - first;
 
   for (int g = first; g < count; ++g)
   {
-    // 材質を設定する
-    shader->setMaterialAmbient(amb[g]);
-    shader->setMaterialDiffuse(diff[g]);
-    shader->setMaterialSpecular(spec[g]);
-    shader->setMaterialShininess(shi[g]);
+    if (shader)
+    {
+      // 材質を設定する
+      shader->setMaterialAmbient(amb[g]);
+      shader->setMaterialDiffuse(diff[g]);
+      shader->setMaterialSpecular(spec[g]);
+      shader->setMaterialShininess(shi[g]);
+    }
 
     // 図形を描画する
     data->draw(group[g][0], group[g][1]);
