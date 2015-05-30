@@ -5541,11 +5541,14 @@ GLuint gg::ggLoadHeight(const char *name, float nz, GLenum internal)
 */
 namespace gg
 {
-  struct rgb      // 色
+  // 色
+  struct rgb
   {
     float r, g, b;
   };
-  struct mat      // マテリアル
+
+  // マテリアル
+  struct mat
   {
     rgb amb;      // ambient
     rgb diff;     // diffuse
@@ -5553,18 +5556,24 @@ namespace gg
     float shi;    // shininess
     float dis;    // dissolve
   };
-  struct vec      // ベクトル
+
+  // ベクトル
+  struct vec
   {
     float x, y, z;
   };
-  struct idx      // 面データ
+
+  // 面データ
+  struct idx
   {
     GLuint p[3];  // 頂点座標番号
     GLuint n[3];  // 頂点法線番号
     GLuint t[3];  // テクスチャ座標番号
     bool smooth;  // スムーズシェーディングの有無
   };
-  struct grp      // 面グループ
+
+  // 面グループ
+  struct grp
   {
     GLuint b;     // 面グループの開始番号
     GLuint c;     // 面グループの頂点数
