@@ -5541,121 +5541,6 @@ namespace gg
       return *this;
     }
 
-    //! \brief 光源の特性
-    struct Light
-    {
-      GLfloat ambient[4];
-      GLfloat diffuse[4];
-      GLfloat specular[4];
-      GLfloat position[4];
-    };
-
-    //! \brief 光源の位置と特性を設定する.
-    //!   \param light 光源の特性の gg::GgSimpleShader::Light 構造体
-    void setLight(const Light &light)
-    {
-      glUniform4fv(loc.lamb, 1, light.ambient);
-      glUniform4fv(loc.ldiff, 1, light.diffuse);
-      glUniform4fv(loc.lspec, 1, light.specular);
-      glUniform4fv(loc.pl, 1, light.position);
-    }
-
-    //! \brief 光源の特性を設定する.
-    //!   \param light 光源の特性の gg::GgSimpleShader::Light 構造体
-    void setLightMaterial(const Light &light)
-    {
-      glUniform4fv(loc.lamb, 1, light.ambient);
-      glUniform4fv(loc.ldiff, 1, light.diffuse);
-      glUniform4fv(loc.lspec, 1, light.specular);
-    }
-
-    //! \brief 光源の位置を設定する.
-    //!   \param x 光源の位置の x 座標.
-    //!   \param y 光源の位置の y 座標.
-    //!   \param z 光源の位置の z 座標.
-    //!   \param w 光源の位置の w 座標. デフォルトは 1.
-    void setLightPosition(GLfloat x, GLfloat y, GLfloat z, GLfloat w = 1.0f)
-    {
-      glUniform4f(loc.pl, x, y, z, w);
-    }
-
-    //! \brief 光源の位置を設定する.
-    //!   \param pos 光源の位置の同次座標を格納した GLfloat 型の 4 要素の配列.
-    void setLightPosition(const GLfloat *pos)
-    {
-      glUniform4fv(loc.pl, 1, pos);
-    }
-
-    //! \brief 光源の強度の環境光成分を設定する.
-    //!   \param r 光源の強度の環境光成分の赤成分.
-    //!   \param g 光源の強度の環境光成分の緑成分.
-    //!   \param b 光源の強度の環境光成分の青成分.
-    //!   \param a 光源の強度の環境光成分の不透明度. デフォルトは 1.
-    void setLightAmbient(GLfloat r, GLfloat g, GLfloat b, GLfloat a = 1.0f)
-    {
-      glUniform4f(loc.lamb, r, g, b, a);
-    }
-
-    //! \brief 光源の強度の環境光成分を設定する.
-    //!   \param amb 光源の強度の環境光成分を格納した GLfloat 型の 4 要素の配列.
-    void setLightAmbient(const GLfloat *amb)
-    {
-      glUniform4fv(loc.lamb, 1, amb);
-    }
-
-    //! \brief 光源の強度の拡散反射光成分を設定する.
-    //!   \param r 光源の強度の拡散反射光成分の赤成分.
-    //!   \param g 光源の強度の拡散反射光成分の緑成分.
-    //!   \param b 光源の強度の拡散反射光成分の青成分.
-    //!   \param a 光源の強度の拡散反射光成分の不透明度. デフォルトは 1.
-    void setLightDiffuse(GLfloat r, GLfloat g, GLfloat b, GLfloat a = 1.0f)
-    {
-      glUniform4f(loc.ldiff, r, g, b, a);
-    }
-
-    //! \brief 光源の強度の拡散反射光成分を設定する.
-    //!   \param diff 光源の強度の拡散反射光成分を格納した GLfloat 型の 4 要素の配列.
-    void setLightDiffuse(const GLfloat *diff)
-    {
-      glUniform4fv(loc.ldiff, 1, diff);
-    }
-
-    //! \brief 光源の強度の鏡面反射光成分を設定する.
-    //!   \param r 光源の強度の鏡面反射光成分の赤成分.
-    //!   \param g 光源の強度の鏡面反射光成分の緑成分.
-    //!   \param b 光源の強度の鏡面反射光成分の青成分.
-    //!   \param a 光源の強度の鏡面反射光成分の不透明度. デフォルトは 1.
-    void setLightSpecular(GLfloat r, GLfloat g, GLfloat b, GLfloat a = 1.0f)
-    {
-      glUniform4f(loc.lspec, r, g, b, a);
-    }
-
-    //! \brief 光源の強度の鏡面反射光成分を設定する.
-    //!   \param spec 光源の強度の鏡面反射光成分を格納した GLfloat 型の 4 要素の配列.
-    void setLightSpecular(const GLfloat *spec)
-    {
-      glUniform4fv(loc.lspec, 1, spec);
-    }
-
-    //! \brief 材質の特性
-    struct Material
-    {
-      GLfloat ambient[4];
-      GLfloat diffuse[4];
-      GLfloat specular[4];
-      GLfloat shininess;
-    };
-
-    //! \brief 材質の特性を設定する.
-    //!   \param material 光源の特性の gg::GgSimpleShader::Material 構造体
-    void setMaterial(const Material &material)
-    {
-      glUniform4fv(loc.kamb, 1, material.ambient);
-      glUniform4fv(loc.kdiff, 1, material.diffuse);
-      glUniform4fv(loc.kspec, 1, material.specular);
-      glUniform1f(loc.kshi, material.shininess);
-    }
-
     //! \brief 環境光に対する反射係数を設定する.
     //!   \param r 環境光に対する反射係数の赤成分.
     //!   \param g 環境光に対する反射係数の緑成分.
@@ -5714,6 +5599,119 @@ namespace gg
       glUniform1f(loc.kshi, shi);
     }
 
+    //! \brief 材質の特性
+    struct Material
+    {
+      GLfloat ambient[4];
+      GLfloat diffuse[4];
+      GLfloat specular[4];
+      GLfloat shininess;
+    };
+
+    //! \brief 材質の特性を設定する.
+    //!   \param material 光源の特性の gg::GgSimpleShader::Material 構造体
+    void setMaterial(const Material &material)
+    {
+      setMaterialAmbient(material.ambient);
+      setMaterialDiffuse(material.diffuse);
+      setMaterialSpecular(material.specular);
+      setMaterialShininess(material.shininess);
+    }
+
+    //! \brief 光源の強度の環境光成分を設定する.
+    //!   \param r 光源の強度の環境光成分の赤成分.
+    //!   \param g 光源の強度の環境光成分の緑成分.
+    //!   \param b 光源の強度の環境光成分の青成分.
+    //!   \param a 光源の強度の環境光成分の不透明度. デフォルトは 1.
+    void setLightAmbient(GLfloat r, GLfloat g, GLfloat b, GLfloat a = 1.0f)
+    {
+      glUniform4f(loc.lamb, r, g, b, a);
+    }
+
+    //! \brief 光源の強度の環境光成分を設定する.
+    //!   \param amb 光源の強度の環境光成分を格納した GLfloat 型の 4 要素の配列.
+    void setLightAmbient(const GLfloat *amb)
+    {
+      glUniform4fv(loc.lamb, 1, amb);
+    }
+
+    //! \brief 光源の強度の拡散反射光成分を設定する.
+    //!   \param r 光源の強度の拡散反射光成分の赤成分.
+    //!   \param g 光源の強度の拡散反射光成分の緑成分.
+    //!   \param b 光源の強度の拡散反射光成分の青成分.
+    //!   \param a 光源の強度の拡散反射光成分の不透明度. デフォルトは 1.
+    void setLightDiffuse(GLfloat r, GLfloat g, GLfloat b, GLfloat a = 1.0f)
+    {
+      glUniform4f(loc.ldiff, r, g, b, a);
+    }
+
+    //! \brief 光源の強度の拡散反射光成分を設定する.
+    //!   \param diff 光源の強度の拡散反射光成分を格納した GLfloat 型の 4 要素の配列.
+    void setLightDiffuse(const GLfloat *diff)
+    {
+      glUniform4fv(loc.ldiff, 1, diff);
+    }
+
+    //! \brief 光源の強度の鏡面反射光成分を設定する.
+    //!   \param r 光源の強度の鏡面反射光成分の赤成分.
+    //!   \param g 光源の強度の鏡面反射光成分の緑成分.
+    //!   \param b 光源の強度の鏡面反射光成分の青成分.
+    //!   \param a 光源の強度の鏡面反射光成分の不透明度. デフォルトは 1.
+    void setLightSpecular(GLfloat r, GLfloat g, GLfloat b, GLfloat a = 1.0f)
+    {
+      glUniform4f(loc.lspec, r, g, b, a);
+    }
+
+    //! \brief 光源の強度の鏡面反射光成分を設定する.
+    //!   \param spec 光源の強度の鏡面反射光成分を格納した GLfloat 型の 4 要素の配列.
+    void setLightSpecular(const GLfloat *spec)
+    {
+      glUniform4fv(loc.lspec, 1, spec);
+    }
+
+    //! \brief 光源の位置を設定する.
+    //!   \param x 光源の位置の x 座標.
+    //!   \param y 光源の位置の y 座標.
+    //!   \param z 光源の位置の z 座標.
+    //!   \param w 光源の位置の w 座標. デフォルトは 1.
+    void setLightPosition(GLfloat x, GLfloat y, GLfloat z, GLfloat w = 1.0f)
+    {
+      glUniform4f(loc.pl, x, y, z, w);
+    }
+
+    //! \brief 光源の位置を設定する.
+    //!   \param pos 光源の位置の同次座標を格納した GLfloat 型の 4 要素の配列.
+    void setLightPosition(const GLfloat *pos)
+    {
+      glUniform4fv(loc.pl, 1, pos);
+    }
+
+    //! \brief 光源の特性
+    struct Light
+    {
+      GLfloat ambient[4];
+      GLfloat diffuse[4];
+      GLfloat specular[4];
+      GLfloat position[4];
+    };
+
+    //! \brief 光源の特性を設定する.
+    //!   \param light 光源の特性の gg::GgSimpleShader::Light 構造体
+    void setLightMaterial(const Light &light)
+    {
+      setLightAmbient(light.ambient);
+      setLightDiffuse(light.diffuse);
+      setLightSpecular(light.specular);
+    }
+
+    //! \brief 光源の位置と特性を設定する.
+    //!   \param light 光源の特性の gg::GgSimpleShader::Light 構造体
+    void setLight(const Light &light)
+    {
+      setLightMaterial(light);
+      setLightPosition(light.position);
+    }
+
     //! \brief 変換行列を設定する.
     //!   \param mp GgMatrix 型の投影変換行列.
     //!   \param mw GgMatrix 型のモデルビュー変換行列.
@@ -5730,6 +5728,45 @@ namespace gg
     {
       GgMatrix tmp(mp), tmw(mw);
       loadMatrix(tmp, tmw);
+    }
+
+    //! \brief シェーダプログラムの使用を開始する.
+    void use()
+    {
+      // プログラムオブジェクトは基底クラスで指定する
+      GgShader::use();
+    }
+
+    //! \brief 光源と変換行列を指定してシェーダプログラムの使用を開始する.
+    //!   \param light 光源の特性の gg::GgSimpleShader::Light 構造体
+    //!   \param mp GgMatrix 型の投影変換行列.
+    //!   \param mw GgMatrix 型のモデルビュー変換行列.
+    void use(const Light &light, const GgMatrix &mp, const GgMatrix &mw)
+    {
+      // プログラムオブジェクトは基底クラスで指定する
+      GgShader::use();
+
+      // 光源を設定する
+      setLight(light);
+
+      // 変換行列を設定する
+      loadMatrix(mp, mw);
+    }
+
+    //! \brief 光源と変換行列を指定してシェーダプログラムの使用を開始する.
+    //!   \param light 光源の特性の gg::GgSimpleShader::Light 構造体
+    //!   \param mp GLfloat 型の 16 要素の配列に格納された投影変換行列.
+    //!   \param mw GLfloat 型の 16 要素の配列に格納されたモデルビュー変換行列.
+    void use(const Light &light, const GLfloat *mp, const GLfloat *mw)
+    {
+      // プログラムオブジェクトは基底クラスで指定する
+      GgShader::use();
+
+      // 光源を設定する
+      setLight(light);
+
+      // 変換行列を設定する
+      loadMatrix(mp, mw);
     }
   };
 
