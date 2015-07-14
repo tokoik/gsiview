@@ -2667,7 +2667,7 @@ namespace gg
   **   \return シェーダプログラムのプログラム名 (作成できなければ 0).
   */
   extern GLuint ggCreateShader(const char *vsrc, const char *fsrc = nullptr, const char *gsrc = nullptr,
-    int nvarying = 0, const char *const *varyings = nullptr,
+    int nvarying = 0, const char *varyings[] = nullptr,
     const char *vtext = "vertex shader",
     const char *ftext = "fragment shader",
     const char *gtext = "geometry shader");
@@ -2683,7 +2683,7 @@ namespace gg
   **   \return シェーダプログラムのプログラム名 (作成できなければ 0).
   */
   extern GLuint ggLoadShader(const char *vert, const char *frag = nullptr, const char *geom = nullptr,
-    int nvarying = 0, const char *const *varyings = nullptr);
+    int nvarying = 0, const char *varyings[] = nullptr);
 
   /*!
   ** \brief 基底クラス.
