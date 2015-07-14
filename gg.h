@@ -5731,7 +5731,7 @@ namespace gg
     }
 
     //! \brief シェーダプログラムの使用を開始する.
-    void use()
+    void use() const
     {
       // プログラムオブジェクトは基底クラスで指定する
       GgShader::use();
