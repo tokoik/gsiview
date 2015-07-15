@@ -5425,7 +5425,7 @@ GLuint gg::ggLoadHeight(const char *name, float nz, GLenum internal)
   // 画像フォーマット
   GLenum format;
 
-  //高さマップの画像を読み込む
+  // 高さマップの画像を読み込む
   const GLubyte *const hmap(ggLoadTga(name, &width, &height, &format));
 
   // 画像が読み込めなかったら戻る
