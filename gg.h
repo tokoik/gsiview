@@ -2559,7 +2559,7 @@ namespace gg
   **   \param name 保存するファイル名.
   **   \return 保存に成功すれば true, 失敗すれば false.
   */
-  bool ggSaveTga(GLsizei sx, GLsizei sy, unsigned int depth, const GLubyte *buffer, const char *name);
+  bool ggSaveTga(GLsizei sx, GLsizei sy, unsigned int depth, const void *buffer, const char *name);
 
   /*!
   ** \brief カラーバッファの内容を TGA ファイルに保存する.
@@ -2684,6 +2684,42 @@ namespace gg
   */
   extern GLuint ggLoadShader(const char *vert, const char *frag = nullptr, const char *geom = nullptr,
     int nvarying = 0, const char *varyings[] = nullptr);
+
+  /*!
+  ** \brief 3 要素の内積
+  **
+  **   \param a GLfloat 型の 3 要素の配列.
+  **   \param b GLfloat 型の 3 要素の配列.
+  */
+  inline GLfloat ggDot3(const GLfloat *a, const GLfloat *b)
+  {
+    return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+  }
+
+  /*!
+  ** \brief 4 要素の内積
+  **
+  **   \param a GLfloat 型の 4 要素の配列.
+  **   \param b GLfloat 型の 4 要素の配列.
+  */
+  inline GLfloat ggDot4(const GLfloat *a, const GLfloat *b)
+  {
+    return a[0] * b[0] + a[1] * b[1] + a[2] * b[2] + a[3] * b[3];
+  }
+
+  /*!
+  ** \brief 3 要素の外積
+  **
+  **   \param a GLfloat 型の 3 要素の配列.
+  **   \param b GLfloat 型の 3 要素の配列.
+  **   \param c 結果を格納する GLfloat 型の 3 要素の配列.
+  */
+  inline void ggCross(GLfloat *c, const GLfloat *a, const GLfloat *b)
+  {
+    c[0] = a[1] * b[2] - a[2] * b[1];
+    c[1] = a[2] * b[0] - a[0] * b[2];
+    c[2] = a[0] * b[1] - a[1] * b[0];
+  }
 
   /*!
   ** \brief 基底クラス.

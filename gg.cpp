@@ -5085,7 +5085,7 @@ void gg::ggFBOError(const char *msg)
 **   \return 保存に成功したら true.
 */
 bool gg::ggSaveTga(GLsizei sx, GLsizei sy, unsigned int depth,
-  const GLubyte *buffer, const char *name)
+  const void *buffer, const char *name)
 {
   // ファイルを開く
   std::ofstream file(name, std::ios::binary);
@@ -5098,11 +5098,13 @@ bool gg::ggSaveTga(GLsizei sx, GLsizei sy, unsigned int depth,
   }
 
   // 画像のヘッダ
+  const unsigned char type(depth == 0 ? 0 : depth < 3 ? 3 : 2);
+  const unsigned char alpha(depth == 2 || depth == 4 ? 8 : 0);
   const unsigned char header[18] =
   {
     0,          // ID length
     0,          // Color map type (none)
-    (unsigned char)((depth == 3) ? 2 : 3), // Image Type (2:RGB, 3:Grayscale)
+    type,       // Image Type (2:RGB, 3:Grayscale)
     0, 0,       // Offset into the color map table
     0, 0,       // Number of color map entries
     0,          // Number of a color map entry bits per pixel
@@ -5112,8 +5114,8 @@ bool gg::ggSaveTga(GLsizei sx, GLsizei sy, unsigned int depth,
     (unsigned char)(sx >> 8),
     (unsigned char)(sy & 0xff),
     (unsigned char)(sy >> 8),
-    (unsigned char)(8 * depth),  // Pixel depth (bits per pixel)
-    0           // Image descriptor
+    (unsigned char)(depth * 8),  // Pixel depth (bits per pixel)
+    alpha       // Image descriptor
   };
 
   // ヘッダを書き込む
@@ -5129,7 +5131,25 @@ bool gg::ggSaveTga(GLsizei sx, GLsizei sy, unsigned int depth,
   }
 
   // データを書き込む
-  file.write(reinterpret_cast<const char *>(buffer), sx * sy * depth);
+  size_t size(sx * sy * depth);
+  if (type == 2)
+  {
+    // フルカラー
+    std::vector<char> temp(size);
+    for (size_t i = 0; i < size; i += depth)
+    {
+      temp[i + 2] = static_cast<const char *>(buffer)[i + 0];
+      temp[i + 1] = static_cast<const char *>(buffer)[i + 1];
+      temp[i + 0] = static_cast<const char *>(buffer)[i + 2];
+      if (depth == 4) temp[i + 3] = static_cast<const char *>(buffer)[i + 3];
+    }
+    file.write(&temp[0], size);
+  }
+  else if (type == 3)
+  {
+    // グレースケール
+    file.write(static_cast<const char *>(buffer), size);
+  }
 
   // フッタを書き込む
   static const char footer[] = "\0\0\0\0\0\0\0\0TRUEVISION-XFILE.";
@@ -5475,16 +5495,15 @@ GLuint gg::ggLoadHeight(const char *name, float nz, GLenum internal)
     const int v(((y + width) % maxsize + x) * bytes);
 
     // 隣接する画素との値の差を法線の成分に用いる
-    const float nx(float(hmap[u] - hmap[o]));
-    const float ny(float(hmap[v] - hmap[o]));
+    const float n[]= { float(hmap[u] - hmap[o]), float(hmap[v] - hmap[o]), nz };
 
     // 法線の長さを求めておく
-    const float nl(sqrt(nx * nx + ny * ny + nz * nz));
+    const float nl(sqrt(ggDot3(n, n)));
 
     // 法線を求める
-    nmap[i][0] = nx / nl;
-    nmap[i][1] = ny / nl;
-    nmap[i][2] = nz / nl;
+    nmap[i][0] = n[0] / nl;
+    nmap[i][1] = n[1] / nl;
+    nmap[i][2] = n[2] / nl;
     nmap[i][3] = hmap[o];
   }
 
@@ -5745,35 +5764,30 @@ bool gg::ggLoadObj(const char *name, GLuint &nv, GLfloat (*&pos)[3], GLfloat (*&
     const GLuint v2(face[f][2] = it->p[2] - 1);
 
     // v1 - v0, v2 - v0 を求める
-    const GLfloat dx1(pos[v1][0] - pos[v0][0]);
-    const GLfloat dy1(pos[v1][1] - pos[v0][1]);
-    const GLfloat dz1(pos[v1][2] - pos[v0][2]);
-    const GLfloat dx2(pos[v2][0] - pos[v0][0]);
-    const GLfloat dy2(pos[v2][1] - pos[v0][1]);
-    const GLfloat dz2(pos[v2][2] - pos[v0][2]);
+    const GLfloat d1[] = { pos[v1][0] - pos[v0][0], pos[v1][1] - pos[v0][1], pos[v1][2] - pos[v0][2] };
+    const GLfloat d2[] = { pos[v2][0] - pos[v0][0], pos[v2][1] - pos[v0][1], pos[v2][2] - pos[v0][2] };
 
     // 外積により面法線を求める
-    const GLfloat nx(dy1 * dz2 - dz1 * dy2);
-    const GLfloat ny(dz1 * dx2 - dx1 * dz2);
-    const GLfloat nz(dx1 * dy2 - dy1 * dx2);
+    GLfloat n[3];
+    ggCross(n, d1, d2);
 
     // 面法線を頂点法線に積算する
-    norm[v0][0] += nx;
-    norm[v0][1] += ny;
-    norm[v0][2] += nz;
-    norm[v1][0] += nx;
-    norm[v1][1] += ny;
-    norm[v1][2] += nz;
-    norm[v2][0] += nx;
-    norm[v2][1] += ny;
-    norm[v2][2] += nz;
+    norm[v0][0] += n[0];
+    norm[v0][1] += n[1];
+    norm[v0][2] += n[2];
+    norm[v1][0] += n[0];
+    norm[v1][1] += n[1];
+    norm[v1][2] += n[2];
+    norm[v2][0] += n[0];
+    norm[v2][1] += n[1];
+    norm[v2][2] += n[2];
   }
 
   // 頂点法線の正規化
   for (GLuint v = 0; v < nv; ++v)
   {
     // 頂点法線の長さ
-    GLfloat a(sqrt(norm[v][0] * norm[v][0] + norm[v][1] * norm[v][1] + norm[v][2] * norm[v][2]));
+    GLfloat a(sqrt(ggDot3(norm[v], norm[v])));
 
     // 頂点法線の正規化
     if (a != 0.0)
@@ -6180,30 +6194,25 @@ bool gg::ggLoadObj(const char *name, GLuint &ng, GLuint (*&group)[2],
       const GLuint v2(it->p[2] - 1);
 
       // v1 - v0, v2 - v0 を求める
-      const GLfloat dx1(tpos[v1].x - tpos[v0].x);
-      const GLfloat dy1(tpos[v1].y - tpos[v0].y);
-      const GLfloat dz1(tpos[v1].z - tpos[v0].z);
-      const GLfloat dx2(tpos[v2].x - tpos[v0].x);
-      const GLfloat dy2(tpos[v2].y - tpos[v0].y);
-      const GLfloat dz2(tpos[v2].z - tpos[v0].z);
+      const GLfloat d1[] = { tpos[v1].x - tpos[v0].x, tpos[v1].y - tpos[v0].y, tpos[v1].z - tpos[v0].z };
+      const GLfloat d2[] = { tpos[v2].x - tpos[v0].x, tpos[v2].y - tpos[v0].y, tpos[v2].z - tpos[v0].z };
 
       // 外積により面法線を求める
-      GLfloat nx(dy1 * dz2 - dz1 * dy2);
-      GLfloat ny(dz1 * dx2 - dx1 * dz2);
-      GLfloat nz(dx1 * dy2 - dy1 * dx2);
+      GLfloat n[3];
+      ggCross(n, d1, d2);
 
       if (it->smooth)
       {
         // 面法線を頂点法線に積算する
-        tnorm[v0].x += nx;
-        tnorm[v0].y += ny;
-        tnorm[v0].z += nz;
-        tnorm[v1].x += nx;
-        tnorm[v1].y += ny;
-        tnorm[v1].z += nz;
-        tnorm[v2].x += nx;
-        tnorm[v2].y += ny;
-        tnorm[v2].z += nz;
+        tnorm[v0].x += n[0];
+        tnorm[v0].y += n[1];
+        tnorm[v0].z += n[2];
+        tnorm[v1].x += n[0];
+        tnorm[v1].y += n[1];
+        tnorm[v1].z += n[2];
+        tnorm[v2].x += n[0];
+        tnorm[v2].y += n[1];
+        tnorm[v2].z += n[2];
 
         // 面データを更新する
         it->n[0] = it->p[0];
@@ -6213,12 +6222,12 @@ bool gg::ggLoadObj(const char *name, GLuint &ng, GLuint (*&group)[2],
       else
       {
         // 面法線を正規化する
-        const GLfloat a(sqrt(nx * nx + ny * ny + nz * nz));
+        const GLfloat a(sqrt(ggDot3(n, n)));
         if (a != 0.0f)
         {
-          nx /= a;
-          ny /= a;
-          nz /= a;
+          n[0] /= a;
+          n[1] /= a;
+          n[2] /= a;
         }
 
         // 3 頂点追加
@@ -6226,15 +6235,15 @@ bool gg::ggLoadObj(const char *name, GLuint &ng, GLuint (*&group)[2],
         tnorm.resize(v + 3);
 
         // 正規化した面法線をそのまま頂点法線にする
-        tnorm[v + 0].x = nx;
-        tnorm[v + 0].y = ny;
-        tnorm[v + 0].z = nz;
-        tnorm[v + 1].x = nx;
-        tnorm[v + 1].y = ny;
-        tnorm[v + 1].z = nz;
-        tnorm[v + 2].x = nx;
-        tnorm[v + 2].y = ny;
-        tnorm[v + 2].z = nz;
+        tnorm[v + 0].x = n[0];
+        tnorm[v + 0].y = n[1];
+        tnorm[v + 0].z = n[2];
+        tnorm[v + 1].x = n[0];
+        tnorm[v + 1].y = n[1];
+        tnorm[v + 1].z = n[2];
+        tnorm[v + 2].x = n[0];
+        tnorm[v + 2].y = n[1];
+        tnorm[v + 2].z = n[2];
 
         // 面データを更新する
         it->n[0] = v + 1;
@@ -6686,11 +6695,11 @@ gg::GgMatrix &gg::GgMatrix::loadRotate(GLfloat x, GLfloat y, GLfloat z, GLfloat 
 
   if (d > 0.0f)
   {
-    GLfloat l  = x / d, m  = y / d, n  = z / d;
-    GLfloat l2 = l * l, m2 = m * m, n2 = n * n;
-    GLfloat lm = l * m, mn = m * n, nl = n * l;
-    GLfloat c = cos(a), c1 = 1.0f - c;
-    GLfloat s = sin(a);
+    const GLfloat l(x / d),  m(y / d),  n(z / d);
+    const GLfloat l2(l * l), m2(m * m), n2(n * n);
+    const GLfloat lm(l * m), mn(m * n), nl(n * l);
+    const GLfloat c(cos(a)), c1(1.0f - c);
+    const GLfloat s(sin(a));
 
     array[ 0] = (1.0f - l2) * c + l2;
     array[ 1] = lm * c1 + n * s;
@@ -7036,7 +7045,7 @@ void gg::GgQuaternion::toQuaternion(GLfloat *q, const GLfloat *a) const
 */
 void gg::GgQuaternion::slerp(GLfloat *p, const GLfloat *q, const GLfloat *r, GLfloat t) const
 {
-  const GLfloat qr(q[0] * r[0] + q[1] * r[1] + q[2] * r[2] + q[3] * r[3]);
+  const GLfloat qr(ggDot3(q, r));
   const GLfloat ss(1.0f - qr * qr);
 
   if (ss == 0.0f)
@@ -7136,7 +7145,7 @@ gg::GgQuaternion &gg::GgQuaternion::loadConjugate(const GgQuaternion &q)
 gg::GgQuaternion &gg::GgQuaternion::loadInvert(const GgQuaternion &q)
 {
   // ノルムの二乗を求める
-  const GLfloat l(q.array[0] * q.array[0] + q.array[1] * q.array[1] + q.array[2] * q.array[2] + q.array[3] * q.array[3]);
+  const GLfloat l(ggDot4(q.array, q.array));
 
   if (l > 0.0f)
   {
@@ -7159,7 +7168,7 @@ gg::GgQuaternion &gg::GgQuaternion::loadInvert(const GgQuaternion &q)
 */
 GLfloat gg::GgQuaternion::norm() const
 {
-  return sqrt(array[0] * array[0] + array[1] * array[1] + array[2] * array[2] + array[3] * array[3]);
+  return sqrt(ggDot4(array, array));
 }
 
 /*
@@ -7533,13 +7542,13 @@ gg::GgElements *gg::ggElementsMesh(int slices, int stacks, const GLfloat (*pos)[
       for (int i = 0; i <= slices; ++i)
       {
         // 処理対象の頂点番号
-        const int k = j * (slices + 1) + i;
+        const int k(j * (slices + 1) + i);
 
         // 処理対象の頂点の周囲の頂点番号
-        const int kim = i > 0 ? k - 1 : k;
-        const int kip = i < slices ? k + 1 : k;
-        const int kjm = j > 0 ? k - slices - 1 : k;
-        const int kjp = j < stacks ? k + slices + 1 : k;
+        const int kim(i > 0 ? k - 1 : k);
+        const int kip(i < slices ? k + 1 : k);
+        const int kjm(j > 0 ? k - slices - 1 : k);
+        const int kjp(j < stacks ? k + slices + 1 : k);
 
         // 接線ベクトル
         const GLfloat t[] =
