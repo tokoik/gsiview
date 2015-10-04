@@ -594,11 +594,11 @@ GgMatrix Window::getMwL()
     eyeRenderViewport[eyeL].Size.w, eyeRenderViewport[eyeL].Size.h);
 
   // Oculus Rift の左目の姿勢を取得する
-  eyePose[eyeL] = ovrHmd_GetHmdPosePerEye(hmd, eyeL);
+  eyePose[0] = ovrHmd_GetHmdPosePerEye(hmd, eyeL);
 
   // Oculus Rift の左目の位置と向きを取得する
-  const ovrQuatf &o(eyePose[eyeL].Orientation);
-  const ovrVector3f &p(eyePose[eyeL].Position);
+  const ovrQuatf &o(eyePose[0].Orientation);
+  const ovrVector3f &p(eyePose[0].Position);
   const ovrVector3f &q(eyeRenderDesc[eyeL].HmdToEyeViewOffset);
 
   // Oculus Rift の右目の向きをモデルビュー変換行列に反映する
@@ -638,11 +638,11 @@ GgMatrix Window::getMwR()
     eyeRenderViewport[eyeR].Size.w, eyeRenderViewport[eyeR].Size.h);
 
   // Oculus Rift の右目の姿勢を取得する
-  eyePose[eyeR] = ovrHmd_GetHmdPosePerEye(hmd, eyeR);
+  eyePose[1] = ovrHmd_GetHmdPosePerEye(hmd, eyeR);
 
   // Oculus Rift の右目の位置と向きを取得する
-  const ovrQuatf &o(eyePose[eyeR].Orientation);
-  const ovrVector3f &p(eyePose[eyeR].Position);
+  const ovrQuatf &o(eyePose[1].Orientation);
+  const ovrVector3f &p(eyePose[1].Position);
   const ovrVector3f &q(eyeRenderDesc[eyeR].HmdToEyeViewOffset);
 
   // Oculus Rift の右目の向きをモデルビュー変換行列に反映する
