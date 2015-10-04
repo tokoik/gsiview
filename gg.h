@@ -39,6 +39,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #    pragma comment(lib, "glfw3" GLFW3_EXT_STR)
 #  endif
 #  pragma comment(lib, "opengl32.lib")
+#  define _USE_MATH_DEFINES
 #  include "glfw3.h"
 #  include "glext.h"
 extern PFNGLACCUMXOESPROC glAccumxOES;
@@ -2559,7 +2560,7 @@ namespace gg
   **   \param name 保存するファイル名.
   **   \return 保存に成功すれば true, 失敗すれば false.
   */
-  bool ggSaveTga(GLsizei sx, GLsizei sy, unsigned int depth, const GLubyte *buffer, const char *name);
+  bool ggSaveTga(GLsizei sx, GLsizei sy, unsigned int depth, const void *buffer, const char *name);
 
   /*!
   ** \brief カラーバッファの内容を TGA ファイルに保存する.
@@ -2595,7 +2596,7 @@ namespace gg
   **   \param height テクスチャとして読み込むデータ image の縦の画素数.
   **   \param internal glTexImage2D() に指定するテクスチャの内部フォーマット.
   **   \param format glTexImage2D() に指定するデータ image のフォーマット.
-  **   \param image テクスチャとして読み込むデータ. NULL ならテクスチャメモリの確保のみ.
+  **   \param image テクスチャとして読み込むデータ. nullptr ならテクスチャメモリの確保のみ.
   */
   extern GLuint ggLoadTexture(GLsizei width, GLsizei height, GLenum internal,
     GLenum format = GL_RGBA, const GLvoid *image = nullptr);
@@ -2684,6 +2685,42 @@ namespace gg
   */
   extern GLuint ggLoadShader(const char *vert, const char *frag = nullptr, const char *geom = nullptr,
     int nvarying = 0, const char *varyings[] = nullptr);
+
+  /*!
+  ** \brief 3 要素の内積
+  **
+  **   \param a GLfloat 型の 3 要素の配列.
+  **   \param b GLfloat 型の 3 要素の配列.
+  */
+  inline GLfloat ggDot3(const GLfloat *a, const GLfloat *b)
+  {
+    return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+  }
+
+  /*!
+  ** \brief 4 要素の内積
+  **
+  **   \param a GLfloat 型の 4 要素の配列.
+  **   \param b GLfloat 型の 4 要素の配列.
+  */
+  inline GLfloat ggDot4(const GLfloat *a, const GLfloat *b)
+  {
+    return a[0] * b[0] + a[1] * b[1] + a[2] * b[2] + a[3] * b[3];
+  }
+
+  /*!
+  ** \brief 3 要素の外積
+  **
+  **   \param a GLfloat 型の 3 要素の配列.
+  **   \param b GLfloat 型の 3 要素の配列.
+  **   \param c 結果を格納する GLfloat 型の 3 要素の配列.
+  */
+  inline void ggCross(GLfloat *c, const GLfloat *a, const GLfloat *b)
+  {
+    c[0] = a[1] * b[2] - a[2] * b[1];
+    c[1] = a[2] * b[0] - a[0] * b[2];
+    c[2] = a[0] * b[1] - a[1] * b[0];
+  }
 
   /*!
   ** \brief 基底クラス.
@@ -4790,7 +4827,7 @@ namespace gg
     //! \brief コンストラクタ.
     //!   \param target バッファオブジェクトのターゲット.
     //!   \param number データの数.
-    //!   \param data データが格納されている領域の先頭のポインタ (NULL ならデータを転送しない).
+    //!   \param data データが格納されている領域の先頭のポインタ (nullptr ならデータを転送しない).
     //!   \param usage バッファオブジェクトの使い方.
     GgBuffer<T>(GLenum target, GLuint number, const T *data, GLenum usage = GL_STATIC_DRAW)
     {
@@ -4982,7 +5019,7 @@ namespace gg
 
     //! \brief コンストラクタ.
     //!   \param nv 頂点数.
-    //!   \param pos この図形の頂点の位置のデータの配列 (NULL ならデータを転送しない).
+    //!   \param pos この図形の頂点の位置のデータの配列 (nullptr ならデータを転送しない).
     //!   \param mode 描画する基本図形の種類.
     //!   \param usage バッファオブジェクトの使い方.
     GgPoints(GLuint nv, const GLfloat (*pos)[3], GLenum mode = GL_POINTS, GLenum usage = GL_STATIC_DRAW)
@@ -5077,8 +5114,8 @@ namespace gg
 
     //! \brief コンストラクタ.
     //!   \param nv 頂点数.
-    //!   \param pos この図形の頂点の位置のデータの配列 (NULL ならデータを転送しない).
-    //!   \param norm この図形の頂点の法線のデータの配列 (NULL ならデータを転送しない).
+    //!   \param pos この図形の頂点の位置のデータの配列 (nullptr ならデータを転送しない).
+    //!   \param norm この図形の頂点の法線のデータの配列 (nullptr ならデータを転送しない).
     //!   \param mode 描画する基本図形の種類.
     //!   \param usage バッファオブジェクトの使い方.
     GgTriangles(GLuint nv, const GLfloat (*pos)[3], const GLfloat (*norm)[3],
@@ -5161,8 +5198,8 @@ namespace gg
 
     //! \brief コンストラクタ.
     //!   \param nv 頂点数.
-    //!   \param pos この図形の頂点の位置のデータの配列 (NULL ならデータを転送しない).
-    //!   \param norm この図形の頂点の法線のデータの配列 (NULL ならデータを転送しない).
+    //!   \param pos この図形の頂点の位置のデータの配列 (nullptr ならデータを転送しない).
+    //!   \param norm この図形の頂点の法線のデータの配列 (nullptr ならデータを転送しない).
     //!   \param nf 三角形数.
     //!   \param face 三角形の頂点インデックス.
     //!   \param mode 描画する基本図形の種類.

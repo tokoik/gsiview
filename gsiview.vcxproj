@@ -68,23 +68,23 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>C:\opencv\build\include;C:\OculusSDK\LibOVR\Include;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\opencv\build\x86\vc12\lib;C:\OculusSDK\LibOVR\Lib\Win32;$(LibraryPath)</LibraryPath>
+    <IncludePath>C:\opencv\build\include;C:\OculusSDK\LibOVR\Include;C:\OculusSDK\LibOVR\Src;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\opencv\build\x86\vc12\lib;C:\OculusSDK\LibOVR\Lib\Win32\VS2013;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>C:\opencv\build\include;C:\OculusSDK\LibOVR\Include;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\opencv\build\x86\vc12\lib;C:\OculusSDK\LibOVR\Lib\Win32;$(LibraryPath)</LibraryPath>
+    <IncludePath>C:\opencv\build\include;C:\OculusSDK\LibOVR\Include;C:\OculusSDK\LibOVR\Src;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\opencv\build\x64\vc12\lib;C:\OculusSDK\LibOVR\Lib\x64\VS2013;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>C:\opencv\build\include;C:\OculusSDK\LibOVR\Include;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\opencv\build\x86\vc12\lib;C:\OculusSDK\LibOVR\Lib\Win32;$(LibraryPath)</LibraryPath>
+    <IncludePath>C:\opencv\build\include;C:\OculusSDK\LibOVR\Include;C:\OculusSDK\LibOVR\Src;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\opencv\build\x86\vc12\lib;C:\OculusSDK\LibOVR\Lib\Win32\VS2013;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>C:\opencv\build\include;C:\OculusSDK\LibOVR\Include;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\opencv\build\x86\vc12\lib;C:\OculusSDK\LibOVR\Lib\Win32;$(LibraryPath)</LibraryPath>
+    <IncludePath>C:\opencv\build\include;C:\OculusSDK\LibOVR\Include;C:\OculusSDK\LibOVR\Src;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\opencv\build\x64\vc12\lib;C:\OculusSDK\LibOVR\Lib\x64\VS2013;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>

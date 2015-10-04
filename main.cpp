@@ -14,9 +14,20 @@
 #  else
 #    define CV_EXT_STR ".lib"
 #  endif
-#  pragma comment(lib, "opencv_core" CV_VERSION_STR CV_EXT_STR)
-#  pragma comment(lib, "opencv_highgui" CV_VERSION_STR CV_EXT_STR)
-#  pragma comment(lib, "opencv_imgproc" CV_VERSION_STR CV_EXT_STR)
+#  pragma comment(lib, "ws2_32.lib")
+#  if CV_MAJOR_VERSION < 3
+#    pragma comment(lib, "IlmImf" CV_EXT_STR)
+#    pragma comment(lib, "libjpeg" CV_EXT_STR)
+#    pragma comment(lib, "libjasper" CV_EXT_STR)
+#    pragma comment(lib, "libpng" CV_EXT_STR)
+#    pragma comment(lib, "libtiff" CV_EXT_STR)
+#    pragma comment(lib, "zlib" CV_EXT_STR)
+#    pragma comment(lib, "opencv_core" CV_VERSION_STR CV_EXT_STR)
+#    pragma comment(lib, "opencv_highgui" CV_VERSION_STR CV_EXT_STR)
+#    pragma comment(lib, "opencv_imgproc" CV_VERSION_STR CV_EXT_STR)
+#  else
+#    pragma comment(lib, "opencv_world" CV_VERSION_STR CV_EXT_STR)
+#  endif
 #endif
 
 // 標準ライブラリ
@@ -30,6 +41,9 @@
 
 // ウィンドウ関連の処理
 #include "Window.h"
+
+// シェーダ
+#define SHADER "simple"
 
 namespace
 {
@@ -174,15 +188,6 @@ namespace
     *count = static_cast<GLsizei>(index.size());
     return vao;
   }
-
-  //
-  // 終了処理
-  //
-  void cleanup()
-  {
-    // GLFW の終了処理
-    glfwTerminate();
-  }
 }
 
 //
@@ -190,25 +195,28 @@ namespace
 //
 int main()
 {
+#if STEREO == OCULUS
+  // Oculus Rift (LibOVR) を初期化する
+  ovr_Initialize();
+
+  // プログラム終了時には LibOVR を終了する
+  atexit(ovr_Shutdown);
+#endif
+
   // GLFW を初期化する
   if (glfwInit() == GL_FALSE)
   {
     // GLFW の初期化に失敗した
 #if defined(_WIN32)
-    MessageBox(NULL, TEXT("GLFW の初期化に失敗しました。"), TEXT("すまんのう"), MB_OK);
+    MessageBox(nullptr, TEXT("GLFW の初期化に失敗しました。"), TEXT("すまんのう"), MB_OK);
 #else
-    std::cerr << "Can't initialize GLFW" << std::endl;
+    std::cerr << "Can't initialize GLFW." << std::endl;
 #endif
     return EXIT_FAILURE;
   }
 
-  // プログラム終了時の処理を登録する
-  atexit(cleanup);
-
-#if STEREO == OCULUS
-  // Oculus Rift (LibOVR) を初期化する
-  System::Init(Log::ConfigureDefaultLog(LogMask_All));
-#endif
+  // プログラム終了時には GLFW を終了する
+  atexit(glfwTerminate);
 
   // OpenGL Version 3.2 Core Profile を選択する
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -229,36 +237,37 @@ int main()
   const GLFWvidmode* mode(glfwGetVideoMode(monitor));
 
   // フルスクリーンでウィンドウを開く
-  Window window(mode->width, mode->height, "GSI 3D Viewer (STEREO)", monitor);
+  Window window(mode->width, mode->height, "AIST Viewer (STEREO)", monitor);
 #else
   // ウィンドウモードでウィンドウを開く
-  Window window(1280, 800, "GSI 3D Viewer");
+  Window window(1920, 1080, "AIST Viewer");
 #endif
   if (!window.get())
   {
     // ウィンドウが作成できなかった
 #if defined(_WIN32)
-    MessageBox(NULL, TEXT("GLFW のウィンドウが開けませんでした。"), TEXT("すまんのう"), MB_OK);
+    MessageBox(nullptr, TEXT("GLFW のウィンドウが開けませんでした。"), TEXT("すまんのう"), MB_OK);
 #else
-    std::cerr << "Can't open GLFW window" << std::endl;
+    std::cerr << "Can't open GLFW window." << std::endl;
 #endif
-    exit(1);
+    return EXIT_FAILURE;
   }
 
-  // 隠面消去処理を有効にする
-  glEnable(GL_DEPTH_TEST);
-
-  // 背面はカリングしない
-  glDisable(GL_CULL_FACE);
-
-  // 背景色を設定する
-  glClearColor(back[0], back[1], back[2], back[3]);
-
   // 描画用のシェーダプログラムを読み込む
-  GgSimpleShader simple("simple.vert", "simple.frag");
+  GgSimpleShader shader(SHADER ".vert", SHADER ".frag");
+  if (!shader.get())
+  {
+    // シェーダが読み込めなかった
+#if defined(_WIN32)
+    MessageBox(nullptr, TEXT("シェーダファイルの読み込みに失敗しました。"), TEXT("すまんのう"), MB_OK);
+#else
+    std::cerr << "Can't read shader file: " SHADER ".vert, " SHADER ".frag" << demfile << std::endl;
+#endif
+    return EXIT_FAILURE;
+  }
 
   // 地形に貼り付けるテクスチャのサンプラの場所を得る
-  GLint cmapLoc(glGetUniformLocation(simple.get(), "cmap"));
+  GLint cmapLoc(glGetUniformLocation(shader.get(), "cmap"));
 
   // 地形データを読み込む
   GLsizei count;
@@ -267,11 +276,11 @@ int main()
   {
     // 地形データが読み込めなかった
 #if defined(_WIN32)
-    MessageBox(NULL, TEXT("データファイルの読み込みに失敗しました。"), TEXT("すまんのう"), MB_OK);
+    MessageBox(nullptr, TEXT("データファイルの読み込みに失敗しました。"), TEXT("すまんのう"), MB_OK);
 #else
     std::cerr << "Can't read data file: " << demfile << std::endl;
 #endif
-    exit(1);
+    return EXIT_FAILURE;
   }
 
   // 読み込んだ地形データを表示する際のスケール
@@ -315,6 +324,15 @@ int main()
   glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, fLargest);
 #endif
 
+  // 隠面消去処理を有効にする
+  glEnable(GL_DEPTH_TEST);
+
+  // 背面はカリングしない
+  glDisable(GL_CULL_FACE);
+
+  // 背景色を設定する
+  glClearColor(back[0], back[1], back[2], back[3]);
+
   // ウィンドウが開いている間くり返し描画する
   while (!window.shouldClose())
   {
@@ -322,9 +340,9 @@ int main()
     window.clear();
 
     // 描画用のシェーダプログラムの使用開始
-    simple.use();
-    simple.setLight(light);
-    simple.setMaterial(material);
+    shader.use();
+    shader.setLight(light);
+    shader.setMaterial(material);
     glUniform1i(cmapLoc, 0);
 
     // テクスチャの指定
@@ -336,19 +354,19 @@ int main()
 
 #if STEREO == NONE
     // 単眼のモデルビュープロジェクション変換行列を設定する
-    simple.loadMatrix(window.getMp(), window.getMw() * mm);
+    shader.loadMatrix(window.getMp(), window.getMw() * mm);
 
     // 描画
     glDrawElements(GL_TRIANGLES, count, GL_UNSIGNED_INT, 0);
 #else
     // 左目のモデルビュープロジェクション変換行列を設定する
-    simple.loadMatrix(window.getMpL(), window.getMwL() * mm);
+    shader.loadMatrix(window.getMpL(), window.getMwL() * mm);
 
     // 描画
     glDrawElements(GL_TRIANGLES, count, GL_UNSIGNED_INT, 0);
 
     // 右目のモデルビュープロジェクション変換行列を設定する
-    simple.loadMatrix(window.getMpR(), window.getMwR() * mm);
+    shader.loadMatrix(window.getMpR(), window.getMwR() * mm);
 
     // 描画
     glDrawElements(GL_TRIANGLES, count, GL_UNSIGNED_INT, 0);

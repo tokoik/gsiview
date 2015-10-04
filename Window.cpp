@@ -2,7 +2,25 @@
 // ウィンドウ関連の処理
 //
 #include <iostream>
+#include <algorithm>
 #include "Window.h"
+
+// Oculus Rift SDK ライブラリ (LibOVR) の組み込み
+#if STEREO == OCULUS
+#  if defined(_WIN32)
+#    if defined(_WIN64)
+#      define OVR_LIB "libovr64"
+#    else
+#      define OVR_LIB "libovr"
+#    endif
+#    if defined(_DEBUG)
+#      pragma comment(lib, OVR_LIB "d.lib")
+#    else
+#      pragma comment(lib, OVR_LIB ".lib")
+#    endif
+#    pragma comment(lib, "winmm.lib")
+#  endif
+#endif
 
 // Mac と Linux ではジョイスティックの右側のスティックの番号が一つずれる
 #if defined(_WIN32)
@@ -16,17 +34,20 @@ const int axesOffset(1);
 //
 Window::Window(int width, int height, const char *title, GLFWmonitor *monitor, GLFWwindow *share)
   : window(glfwCreateWindow(width, height, title, monitor, share))
+  , key(0)                                // 最後にタイプしたキー
   , ex(startPosition[0])                  // カメラの x 座標
   , ey(startPosition[1])                  // カメラの y 座標
   , ez(startPosition[2])                  // カメラの z 座標
   , direction(0.0f)                       // カメラの進行方向
   , heading(0.0f)                         // カメラの方位角
   , pitch(0.0f)                           // カメラの仰角
-#if STEREO != OCULUS && STEREO != NONE
-  , parallax(initialParallax)
-#endif
 #if STEREO != OCULUS
+#  if STEREO != NONE
+  , parallax(initialParallax)
+#  endif
   , scrH(zNear * screenCenter / screenDistance)
+#else
+  , hmd(ovrHmd_Create(count))
 #endif
 {
   if (!window) return;
@@ -78,130 +99,93 @@ Window::Window(int width, int height, const char *title, GLFWmonitor *monitor, G
   }
 
 #if STEREO == OCULUS
-  // プログラムオブジェクト, VAO / VBO, Oculus Rift のデバイスマネージャーの作成は最初一度だけ行う
-  if (count == 0)
-  {
-    // Oculus Rift のレンズの歪みを補正するシェーダプログラム
-    ocuProgram = ggLoadShader("oculus.vert", "oculus.frag");
-    ocuFboColorLoc = glGetUniformLocation(ocuProgram, "ocuFboColor");
-    ocuAspectLoc = glGetUniformLocation(ocuProgram, "ocuAspect");
-    projectionCenterOffsetLoc = glGetUniformLocation(ocuProgram, "projectionCenterOffset");
-    lensDistortionLoc = glGetUniformLocation(ocuProgram, "lensDistortion");
-    lensScaleLoc = glGetUniformLocation(ocuProgram, "lensScale");
-
-    // Oculus Rift 表示に使う矩形
-    glGenVertexArrays(1, &ocuVao);
-    glBindVertexArray(ocuVao);
-    glGenBuffers(1, &ocuVbo);
-    glBindBuffer(GL_ARRAY_BUFFER, ocuVbo);
-    static const GLfloat rect[] = { -1.0f, -1.0f, 1.0f, -1.0f, 1.0f, 1.0f, -1.0f, 1.0f };
-    glBufferData(GL_ARRAY_BUFFER, sizeof rect, rect, GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, 0);
-    glEnableVertexAttribArray(0);
-
-    // Oculus Rift のデバイスマネージャーの作成
-    pManager = *DeviceManager::Create();
-  }
-
-  // Oculus Rift のデバイスマネージャーが作成できたら情報を取得する
-  if (pManager
-    && (pHmd = *pManager->EnumerateDevices<HMDDevice>().CreateDevice())
-    && pHmd->GetDeviceInfo(&hmdInfo)
-    )
+  if (hmd)
   {
 #  if defined(_DEBUG)
-    // 取得した情報を表示する
-    std::cout << hmdInfo.DisplayDeviceName << std::endl;
-    std::cout << "\nResolution:"
-      << hmdInfo.HResolution << ", "
-      << hmdInfo.VResolution << std::endl;
-    std::cout << "\nScreen size: "
-      << hmdInfo.HScreenSize << ", "
-      << hmdInfo.VScreenSize << std::endl;
-    std::cout << "\nVertical Screen Center: "
-      << hmdInfo.VScreenCenter << std::endl;
-    std::cout << "\nEye to Screen Distance: "
-      << hmdInfo.EyeToScreenDistance << std::endl;
-    std::cout << "\nLens Separation Distance: "
-      << hmdInfo.LensSeparationDistance << std::endl;
-    std::cout << "\nInterpupillary Distance: "
-      << hmdInfo.InterpupillaryDistance << std::endl;
-    std::cout << "\nDistortion: "
-      << hmdInfo.DistortionK[0] << ", "
-      << hmdInfo.DistortionK[1] << ", "
-      << hmdInfo.DistortionK[2] << ", "
-      << hmdInfo.DistortionK[3] << std::endl;
-    std::cout << std::endl;
+    // Oculus Rift の情報を表示する
+    std::cout
+      << "\nProduct name: " << hmd->ProductName
+      << "\nResolution:   " << hmd->Resolution.w << " x " << hmd->Resolution.h
+      << "\nScreen Size:  " << hmd->CameraFrustumHFovInRadians
+      << " x " << hmd->CameraFrustumVFovInRadians
+      << "\nDepth Range:   " << hmd->CameraFrustumNearZInMeters
+      << " - " << hmd->CameraFrustumFarZInMeters
+      << "\n" << std::endl;
 #  endif
 
-    // レンズの中心の画面の中心からのずれ
-    projectionCenterOffset = 1.0f - 2.0f * hmdInfo.LensSeparationDistance / hmdInfo.HScreenSize;
+    // Oculus Rift レンダリング用の左右の目のビューポート
+    eyeRenderViewport[0].Pos = ovrVector2i{ 0, 0 };
+    eyeRenderViewport[0].Size = ovrHmd_GetFovTextureSize(hmd, ovrEye_Left, hmd->DefaultEyeFov[0], 1.0f);
+    eyeRenderViewport[1].Pos = ovrVector2i{ eyeRenderViewport[0].Size.w, 0 };
+    eyeRenderViewport[1].Size = ovrHmd_GetFovTextureSize(hmd, ovrEye_Right, hmd->DefaultEyeFov[1], 1.0f);
 
-    // スクリーンの幅と高さ
-    scrW = scrH = zNear * hmdInfo.VScreenCenter / hmdInfo.EyeToScreenDistance;
+    // Oculus Rift レンダリング用の FBO のサイズ
+    renderTargetSize.w = eyeRenderViewport[0].Size.w + eyeRenderViewport[1].Size.w;
+    renderTargetSize.h = std::max(eyeRenderViewport[0].Size.h, eyeRenderViewport[1].Size.h);
 
-    // 視差
-    parallax = hmdInfo.InterpupillaryDistance * 0.5f;
-
-    // レンズの歪みの補正係数
-    lensDistortion[0] = hmdInfo.DistortionK[0];
-    lensDistortion[1] = hmdInfo.DistortionK[1];
-    lensDistortion[2] = hmdInfo.DistortionK[2];
-    lensDistortion[3] = hmdInfo.DistortionK[3];
-
-    // 片目の表示領域のアスペクト比
-    ocuAspect = hmdInfo.HScreenSize * 0.5f / hmdInfo.VScreenSize;
-
-    // Oculus Rift のセンサの取得
-    pSensor = *pHmd->GetSensor();
-
-    // センサーを登録する
-    if (pSensor) sensorFusion.AttachToSensor(pSensor);
-  }
-  else
-  {
-    // Oculus Rift をつながずにデバッグする時の設定
-    scrW = scrH = zNear * 0.0468f / 0.041f;
-    parallax = 0.064f * 0.5f;
-    projectionCenterOffset = 1.0f - 2.0f * 0.0635f / 0.14976f;
-    lensDistortion[0] = 1.0f;
-    lensDistortion[1] = 0.2f;
-    lensDistortion[2] = 0.24f;
-    lensDistortion[3] = 0.0f;
-    ocuAspect = 0.14976f * 0.5f / 0.0936f;
-    pSensor = nullptr;
-  }
-
-  // レンズの歪み補正に伴う拡大率の補正
-  lensScale = 1.0f / (lensDistortion[0] + lensDistortion[1] + lensDistortion[2] + lensDistortion[3]);
-
-  // Oculus Rift の左目用と右目用の FBO の準備
-  glGenFramebuffers(2, ocuFbo);
-
-  // Oculus Rift 表示用の FBO のデプスバッファとして使うレンダーバッファの作成
-  glGenRenderbuffers(1, &ocuFboDepth);
-  glBindRenderbuffer(GL_RENDERBUFFER, ocuFboDepth);
-  glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, fboWidth, fboHeight);
-
-  // Oculus Rift 表示用の FBO のカラーバッファとして使うカラーテクスチャの作成
-  glGenTextures(2, ocuFboColor);
-  for (int i = 0; i < 2; ++i)
-  {
-    // 左右の目のそれぞれの表示サイズより少し大きなテクスチャメモリの確保
-    glBindTexture(GL_TEXTURE_2D, ocuFboColor[i]);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, fboWidth, fboHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+    // Oculus Rift レンダリング用の FBO のカラーバッファとして使うカラーテクスチャの作成
+    glGenTextures(1, &ocuFboColor);
+    glBindTexture(GL_TEXTURE_2D, ocuFboColor);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, renderTargetSize.w, renderTargetSize.h, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
     glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, border);
 
-    // 左右の目のそれぞれについて FBO を作成する
-    glBindFramebuffer(GL_FRAMEBUFFER, ocuFbo[i]);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-      GL_TEXTURE_2D, ocuFboColor[i], 0);
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
-      GL_RENDERBUFFER, ocuFboDepth);
+    // Oculus Rift レンダリング用の FBO のデプスバッファとして使うレンダーバッファの作成
+    glGenRenderbuffers(1, &ocuFboDepth);
+    glBindRenderbuffer(GL_RENDERBUFFER, ocuFboDepth);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, renderTargetSize.w, renderTargetSize.h);
+
+    // Oculus Rift のレンダリング用の FBO を作成する
+    glGenFramebuffers(1, &ocuFbo);
+    glBindFramebuffer(GL_FRAMEBUFFER, ocuFbo);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, ocuFboColor, 0);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, ocuFboDepth);
+
+    // レンダーターゲットのテクスチャを参照する設定
+    eyeTexture[0].OGL.Header.API = eyeTexture[1].OGL.Header.API = ovrRenderAPI_OpenGL;
+    eyeTexture[0].OGL.Header.TextureSize = eyeTexture[1].OGL.Header.TextureSize = renderTargetSize;
+    eyeTexture[0].OGL.Header.RenderViewport = eyeRenderViewport[0];
+    eyeTexture[1].OGL.Header.RenderViewport = eyeRenderViewport[1];
+    eyeTexture[0].OGL.TexId = eyeTexture[1].OGL.TexId = ocuFboColor;
+
+    // Oculus Rift に OpenGL でレンダリングするための設定
+    ovrGLConfig cfg;
+    cfg.OGL.Header.API = ovrRenderAPI_OpenGL;
+    cfg.OGL.Header.BackBufferSize = hmd->Resolution;
+    cfg.OGL.Header.Multisample = backBufferMultisample;
+#if defined(_WIN32)
+    cfg.OGL.Window = glfwGetWin32Window(window);
+    cfg.OGL.DC = GetDC(cfg.OGL.Window);
+
+    // 拡張デスクトップでなければ Direct Rendering する
+    if (!(hmd->HmdCaps & ovrHmdCap_ExtendDesktop))
+      ovrHmd_AttachToWindow(hmd, cfg.OGL.Window, nullptr, nullptr);
+#elif defined(X11)
+    cfg.OGL.Disp = glfwGetX11Display();
+#endif
+
+    // Oculus Rift を設定する
+    ovrHmd_ConfigureRendering(hmd, &cfg.Config,
+      ovrDistortionCap_Chromatic |
+      ovrDistortionCap_Vignette |
+      ovrDistortionCap_TimeWarp |
+      ovrDistortionCap_Overdrive |
+      0,
+      hmd->DefaultEyeFov, eyeRenderDesc);
+    ovrHmd_SetEnabledCaps(hmd,
+      ovrHmdCap_LowPersistence |
+      ovrHmdCap_DynamicPrediction |
+      0);
+
+    // トラッキング・センサフュージョンを初期化する
+    ovrHmd_ConfigureTracking(hmd,
+      ovrTrackingCap_Orientation |
+      ovrTrackingCap_MagYawCorrection |
+      ovrTrackingCap_Position |
+      0, 0);
   }
 #endif
 
@@ -221,21 +205,11 @@ Window::~Window()
   --count;
 
 #if STEREO == OCULUS
-  // プログラムオブジェクト, VAO / VBO, Oculus Rift のデバイスマネージャーは最後に削除する
-  if (count == 0)
-  {
-    // プログラムオブジェクトの削除
-    glDeleteProgram(ocuProgram);
+  // Oculus Rift のレンダリングの設定を初期設定に戻す
+  ovrHmd_ConfigureRendering(hmd, nullptr, 0, nullptr, nullptr);
 
-    // VAO の削除
-    glDeleteBuffers(1, &ocuVbo);
-    glDeleteVertexArrays(1, &ocuVao);
-  }
-
-  // FBO の削除
-  glDeleteTextures(1, &ocuFboDepth);
-  glDeleteTextures(2, ocuFboColor);
-  glDeleteFramebuffers(2, ocuFbo);
+  // Oculus Rift のデバイスを破棄する
+  ovrHmd_Destroy(hmd);
 #endif
 
   glfwDestroyWindow(window);
@@ -249,37 +223,23 @@ Window::~Window()
 //
 void Window::clear()
 {
-#if STEREO == OCULUS
-  // 隠面消去処理を有効にする
-  glEnable(GL_DEPTH_TEST);
-
-  // FBO 全体をビューポートにする
-  glViewport(0, 0, fboWidth, fboHeight);
-
-  // センサー有効時の処理
-  if (pSensor)
-  {
-    // Oculus Rift の向きを取得する
-    const Quatf o(sensorFusion.GetOrientation());
-
-    // Oculus Rift の向きの回転の変換行列を求める
-    const GgMatrix mo(ggQuaternionTransposeMatrix(GgQuaternion(o.x, o.y, o.z, o.w)));
-
-    // Oculus Rift の向きをモデルビュー変換行列に反映する
-    mv = mo.rotateX(-1.5707963f).rotateZ(direction).translate(-ex, -ey, -ez);
-  }
-  else
-  {
-    // モデルビュー変換行列を設定する
-    mv = ggRotateX(pitch).rotateZ(heading + direction).translate(-ex, -ey, -ez);
-  }
-#else
   // モデルビュー変換行列を設定する
   mv = ggRotateX(pitch).rotateZ(heading + direction).translate(-ex, -ey, -ez);
 
-  // カラーバッファとデプスバッファを消去
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+#if STEREO == NONE || STEREO == QUADBUFFER
+  // ウィンドウ全体をビューポートにする
+  glViewport(0, 0, winW, winH);
+#elif STEREO == OCULUS
+  // フレームのタイミング計測開始
+  frameTiming = ovrHmd_BeginFrame(hmd, 0);
+
+  // FBO に描画する
+  glBindFramebuffer(GL_FRAMEBUFFER, ocuFbo);
+  glDrawBuffers(1, ocuFboDrawBuffers);
 #endif
+
+  // カラーバッファとデプスバッファを消去する
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
 //
@@ -291,54 +251,48 @@ void Window::clear()
 //
 void Window::swapBuffers()
 {
-#if STEREO == OCULUS
-  // ディスプレイに描く
-  glBindFramebuffer(GL_FRAMEBUFFER, 0);
-  glDrawBuffer(GL_BACK);
-
-  // 隠面消去処理は行わない
-  glDisable(GL_DEPTH_TEST);
-
-  // 表示領域を覆う矩形
-  glBindVertexArray(ocuVao);
-
-  // Oculus Rift のレンズ補正用シェーダ
-  glUseProgram(ocuProgram);
-
-  // FBO に描画した結果を参照するテクスチャユニット
-  glActiveTexture(GL_TEXTURE0);
-  glUniform1i(ocuFboColorLoc, 0);
-
-  // Oculus Rift のアスペクト比
-  glUniform1f(ocuAspectLoc, ocuAspect);
-
-  // レンズの歪みの補正係数
-  glUniform4fv(lensDistortionLoc, 1, lensDistortion);
-
-  // レンズの拡大率の補正係数
-  glUniform1f(lensScaleLoc, lensScale);
-
-  // 左目の描画
-  glUniform1f(projectionCenterOffsetLoc, -projectionCenterOffset);
-  glViewport(0, 0, winW, winH);
-  glBindTexture(GL_TEXTURE_2D, ocuFboColor[0]);
-  glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-
-  // 右目の描画
-  glUniform1f(projectionCenterOffsetLoc, projectionCenterOffset);
-  glViewport(winW, 0, winW, winH);
-  glBindTexture(GL_TEXTURE_2D, ocuFboColor[1]);
-  glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-#endif
-
   // エラーチェック
   ggError("SwapBuffers");
 
-  // カラーバッファを入れ替える
-  glfwSwapBuffers(window);
-
   // イベントを取り出す
   glfwPollEvents();
+
+#if STEREO != OCULUS
+  // カラーバッファを入れ替える
+  glfwSwapBuffers(window);
+#else
+  // 健康と安全に関する警告の表示状態を取得する
+  ovrHSWDisplayState hswDisplayState;
+  ovrHmd_GetHSWDisplayState(hmd, &hswDisplayState);
+
+  // 警告表示をしていれば
+  if (hswDisplayState.Displayed)
+  {
+    if (key)
+    {
+      // 何かキーをタイプしていれば警告を消す
+      ovrHmd_DismissHSWDisplay(hmd);
+    }
+    else
+    {
+      // Oculus Rift を横から軽くたたいたかどうかを検出する
+      const ovrTrackingState ts(ovrHmd_GetTrackingState(hmd, ovr_GetTimeInSeconds()));
+
+      // 向きの変化が検出されたら
+      if (ts.StatusFlags & ovrStatus_OrientationTracked)
+      {
+        // 生のセンサーの加速度を取得する
+        const ovrVector3f a(ts.RawSensorData.Accelerometer);
+
+        // 加速度が一定以上だったら警告を消す
+        if (a.x * a.x + a.y * a.y + a.z * a.z > 10000.0f) ovrHmd_DismissHSWDisplay(hmd);
+      }
+    }
+  }
+
+  // FBO への描画を終了する
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
+#endif
 
   // マウスの位置を調べる
   double x, y;
@@ -425,64 +379,25 @@ void Window::swapBuffers()
   }
 
 #if STEREO != NONE
-  // 左矢印キー操作
-  if (glfwGetKey(window, GLFW_KEY_LEFT))
-  {
-#  if STEREO == OCULUS
-    if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) || glfwGetKey(window, GLFW_KEY_RIGHT_SHIFT))
-    {
-      // レンズ間隔を縮小する
-      projectionCenterOffset -= projectionCenterOffsetStep;
-    }
-    else
-    {
-      // 視差を縮小する
-      parallax -= parallaxStep;
-      updateStereoProjectionMatrix();
-    }
-#  else
-    // 視差を縮小する
-    parallax -= parallaxStep;
-    updateStereoProjectionMatrix();
-#  endif
-  }
-
+#  if STEREO != OCULUS
   // 右矢印キー操作
   if (glfwGetKey(window, GLFW_KEY_RIGHT))
   {
-#  if STEREO == OCULUS
-    if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) || glfwGetKey(window, GLFW_KEY_RIGHT_SHIFT))
-    {
-      // レンズ間隔を拡大する
-      projectionCenterOffset += projectionCenterOffsetStep;
-    }
-    else
-    {
-      // 視差を拡大する
-      parallax += parallaxStep;
-      updateStereoProjectionMatrix();
-    }
-#  else
     // 視差を拡大する
     parallax += parallaxStep;
     updateStereoProjectionMatrix();
-#  endif
   }
 
-#  if STEREO == OCULUS
   // 左矢印キー操作
-  if (glfwGetKey(window, GLFW_KEY_DOWN))
+  if (glfwGetKey(window, GLFW_KEY_LEFT))
   {
-    // レンズの拡大率の補正係数を下げる
-    lensScale -= lensScaleStep;
+    // 視差を縮小する
+    parallax -= parallaxStep;
+    updateStereoProjectionMatrix();
   }
-
-  // 右矢印キー操作
-  if (glfwGetKey(window, GLFW_KEY_UP))
-  {
-    // レンズの拡大率の補正係数を上げる
-    lensScale += lensScaleStep;
-  }
+#  else
+  // フレームのタイミング計測終了
+  ovrHmd_EndFrame(hmd, eyePose, &eyeTexture[0].Texture);
 #  endif
 #endif
 }
@@ -503,29 +418,28 @@ void Window::resize(GLFWwindow *window, int width, int height)
 #if STEREO != OCULUS
     // ディスプレイのアスペクト比 w / h からスクリーンの幅を求める
     instance->scrW = instance->scrH * static_cast<GLfloat>(width) / static_cast<GLfloat>(height);
-#endif
 
-#if STEREO == SIDEBYSIDE || STEREO == OCULUS
+#  if STEREO == SIDEBYSIDE
     // ウィンドウの横半分をビューポートにする
     width /= 2;
-#elif STEREO == TOPANDBOTTOM
+#  elif STEREO == TOPANDBOTTOM
     // ウィンドウの縦半分をビューポートにする
     height /= 2;
-#else
-    // ウィンドウ全体をビューポートにする
-    glViewport(0, 0, width, height);
+#  endif
 #endif
 
-#if STEREO == NONE
-    // 投影変換行列を求める
-    instance->updateProjectionMatrix();
-#else
-    // ステレオ表示の時はビューポートの大きさを保存しておく
+#if STEREO != OCULUS
+    // ビューポートの大きさを保存しておく
     instance->winW = width;
     instance->winH = height;
 
-    // 投影変換行列を求める
+#  if STEREO == NONE
+    // 単眼視用の投影変換行列を求める
+    instance->updateProjectionMatrix();
+#  else
+    // 立体視用の投影変換行列を求める
     instance->updateStereoProjectionMatrix();
+#  endif
 #endif
   }
 }
@@ -608,6 +522,10 @@ void Window::keyboard(GLFWwindow *window, int key, int scancode, int action, int
   {
     if (action == GLFW_PRESS)
     {
+      // 最後にタイプしたキーを覚えておく
+      instance->key = key;
+
+      // キーボード操作による処理
       switch (key)
       {
       case GLFW_KEY_R:
@@ -649,30 +567,43 @@ void Window::keyboard(GLFWwindow *window, int key, int scancode, int action, int
 //
 //   ・左目の描画特有の処理を行う
 //
-GgMatrix Window::getMwL() const
+GgMatrix Window::getMwL()
 {
-#  if STEREO == LINEBYLINE
+#  if STEREO != OCULUS
+#    if STEREO == LINEBYLINE
   // 偶数番目の走査線だけに描画する
-#  elif STEREO == TOPANDBOTTOM
+#    elif STEREO == TOPANDBOTTOM
   // ディスプレイの上半分だけに描画する
   glViewport(0, winH, winW, winH);
-#  elif STEREO == SIDEBYSIDE
+#    elif STEREO == SIDEBYSIDE
   // ディスプレイの左半分だけに描画する
   glViewport(0, 0, winW, winH);
-#  elif STEREO == QUADBUFFER
+#    elif STEREO == QUADBUFFER
   // 左目用バッファに描画する
   glDrawBuffer(GL_BACK_LEFT);
-#  elif STEREO == OCULUS
-  // 左目用の FBO に描画する
-  glBindFramebuffer(GL_FRAMEBUFFER, ocuFbo[0]);
-  glDrawBuffers(1, ocuFboDrawBuffers);
-
-  // 左目用の FBO を消去する
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-#  endif
+#    endif
 
   // 左目を左に動かす代わりにシーンを右に動かす
   return ggTranslate(parallax, 0.0f, 0.0f) * mv;
+#  else
+  // Oculus Rift の左目の識別子
+  const ovrEyeType &eyeL(hmd->EyeRenderOrder[0]);
+
+  // Oculus Rift の右目のビューポートに描画する
+  glViewport(eyeRenderViewport[eyeL].Pos.x, eyeRenderViewport[eyeL].Pos.y,
+    eyeRenderViewport[eyeL].Size.w, eyeRenderViewport[eyeL].Size.h);
+
+  // Oculus Rift の左目の姿勢を取得する
+  eyePose[eyeL] = ovrHmd_GetHmdPosePerEye(hmd, eyeL);
+
+  // Oculus Rift の左目の位置と向きを取得する
+  const ovrQuatf &o(eyePose[eyeL].Orientation);
+  const ovrVector3f &p(eyePose[eyeL].Position);
+  const ovrVector3f &q(eyeRenderDesc[eyeL].HmdToEyeViewOffset);
+
+  // Oculus Rift の右目の向きをモデルビュー変換行列に反映する
+  return ggQuaternionTransposeMatrix(GgQuaternion(o.x, o.y, o.z, o.w)) * ggTranslate(q.x - p.x, q.y - p.y, q.z - p.z) * mv;
+#  endif
 }
 
 //
@@ -680,59 +611,48 @@ GgMatrix Window::getMwL() const
 //
 //   ・右目の描画特有の処理を行う
 //
-GgMatrix Window::getMwR() const
+GgMatrix Window::getMwR()
 {
-#  if STEREO == LINEBYLINE
+#  if STEREO != OCULUS
+#    if STEREO == LINEBYLINE
   // 奇数番目の走査線だけに描画する
-#  elif STEREO == TOPANDBOTTOM
+#    elif STEREO == TOPANDBOTTOM
   // ディスプレイの下半分だけに描画する
   glViewport(0, 0, winW, winH);
-#  elif STEREO == SIDEBYSIDE
+#    elif STEREO == SIDEBYSIDE
   // ディスプレイの右半分だけに描画する
   glViewport(winW, 0, winW, winH);
-#  elif STEREO == QUADBUFFER
+#    elif STEREO == QUADBUFFER
   // 右目用バッファに描画する
   glDrawBuffer(GL_BACK_RIGHT);
-#  elif STEREO == OCULUS
-  // 右目用の FBO に描画する
-  glBindFramebuffer(GL_FRAMEBUFFER, ocuFbo[1]);
-  glDrawBuffers(1, ocuFboDrawBuffers);
-
-  // 右目用の FBO を消去する
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-#  endif
+#    endif
 
   // 右目を左に動かす代わりにシーンを左に動かす
   return ggTranslate(-parallax, 0.0f, 0.0f) * mv;
+#  else
+  // Oculus Rift の右目の識別子
+  const ovrEyeType &eyeR(hmd->EyeRenderOrder[1]);
+
+  // Oculus Rift の右目のビューポートを設定する
+  glViewport(eyeRenderViewport[eyeR].Pos.x, eyeRenderViewport[eyeR].Pos.y,
+    eyeRenderViewport[eyeR].Size.w, eyeRenderViewport[eyeR].Size.h);
+
+  // Oculus Rift の右目の姿勢を取得する
+  eyePose[eyeR] = ovrHmd_GetHmdPosePerEye(hmd, eyeR);
+
+  // Oculus Rift の右目の位置と向きを取得する
+  const ovrQuatf &o(eyePose[eyeR].Orientation);
+  const ovrVector3f &p(eyePose[eyeR].Position);
+  const ovrVector3f &q(eyeRenderDesc[eyeR].HmdToEyeViewOffset);
+
+  // Oculus Rift の右目の向きをモデルビュー変換行列に反映する
+  return ggQuaternionTransposeMatrix(GgQuaternion(o.x, o.y, o.z, o.w)) * ggTranslate(q.x - p.x, q.y - p.y, q.z - p.z) * mv;
+#  endif
 }
 
 #  if STEREO == OCULUS
-// Oculus Rift 表示に使う矩形
-GLuint Window::ocuVao, Window::ocuVbo;
-
-// Oculus Rift 表示用のシェーダプログラム
-GLuint Window::ocuProgram;
-
-// Oculus Rift 表示用の FBO のテクスチャユニットの uniform 変数の場所
-GLint Window::ocuFboColorLoc;
-
-// Oculus Rift の画面のアスペクト比の uniform 変数の場所
-GLint Window::ocuAspectLoc;
-
-// Oculus Rift のレンズの中心の画面の中心からのずれの uniform 変数の場所
-GLint Window::projectionCenterOffsetLoc;
-
-// Oculus Rift のレンズの歪みの補正係数の uniform 変数の場所
-GLint Window::lensDistortionLoc;
-
-// Oculus Rift のレンズの拡大率の補正係数の uniform 変数の場所
-GLint Window::lensScaleLoc;
-
 // Oculus Rift 表示用の FBO のレンダーターゲット
 const GLenum Window::ocuFboDrawBuffers[] = { GL_COLOR_ATTACHMENT0 };
-
-// Oculus Rift のヘッドトラッキングセンサ
-Ptr<DeviceManager> Window::pManager;
 #  endif
 #endif
 

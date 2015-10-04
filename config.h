@@ -17,7 +17,7 @@ using namespace gg;
 #define OCULUS        5                                 // Oculus Rift (HMD)
 
 // —§‘Ì‹‚Ì•û®
-#define STEREO        NONE
+#define STEREO        OCULUS
 
 // —§‘Ì‹“Á—L‚Ìƒpƒ‰ƒ[ƒ^
 #if STEREO != NONE
@@ -29,7 +29,7 @@ const GLfloat parallaxStep(0.001f);                     // ‹·‚Ì•ÏXƒXƒeƒbƒv (’
 #  if STEREO == OCULUS
 const GLfloat lensScaleStep(0.001f);                    // ƒŒƒ“ƒY‚ÌŠg‘å—¦‚Ì•â³ŒW”‚Ì’²®ƒXƒeƒbƒv
 const GLfloat projectionCenterOffsetStep(0.001f);       // ƒŒƒ“ƒY‚Ì’†SˆÊ’u‚Ì’²®ƒXƒeƒbƒv
-const GLuint fboWidth(1024), fboHeight(1024);           // •â³‚Ég‚¤ FBO ‚ÌƒTƒCƒY
+const int backBufferMultisample(1);                     // ƒ}ƒ‹ƒ`ƒTƒ“ƒvƒŠƒ“ƒO‚ÌƒTƒ“ƒvƒ‹”
 #  endif
 #endif
 

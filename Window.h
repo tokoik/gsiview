@@ -4,28 +4,22 @@
 // ウィンドウ関連の処理
 //
 
-// 標準ライブラリ
-#include <cmath>
-
 // 各種設定
 #include "config.h"
 
 // Oculus Rift SDK ライブラリ (LibOVR) の組み込み
 #if STEREO == OCULUS
 #  if defined(_WIN32)
-#    if defined(_DEBUG)
-#      pragma comment(lib, "libovrd.lib")
-#    else
-#      pragma comment(lib, "libovr.lib")
+#    define NOMINMAX
+#    define GLFW_EXPOSE_NATIVE_WIN32
+#    define GLFW_EXPOSE_NATIVE_WGL
+#    include "glfw3native.h"
+#    if defined(APIENTRY)
+#      undef APIENTRY
 #    endif
-#    pragma comment(lib, "winmm.lib")
 #  endif
-#  if defined(APIENTRY)
-#    undef APIENTRY
-#  endif
-#  include <OVRVersion.h>
 #  include <OVR.h>
-using namespace OVR;
+#  include <OVR_CAPI_GL.h>
 #endif
 
 //
@@ -35,6 +29,9 @@ class Window
 {
   // ウィンドウの識別子
   GLFWwindow *const window;
+
+  // 最後にタイプしたキー
+  int key;
 
   // ジョイスティックの番号
   int joy;
@@ -57,10 +54,14 @@ class Window
   // モデルビュー変換行列
   GgMatrix mv;
 
+#if STEREO != OCULUS
+  // ウィンドウの幅と高さ
+  int winW, winH;
+
   // スクリーンの幅と高さ
   GLfloat scrW, scrH;
 
-#if STEREO == NONE
+#  if STEREO == NONE
   // 投影変換行列
   GgMatrix mp;
 
@@ -73,10 +74,7 @@ class Window
   {
     mp.loadFrustum(-scrW, scrW, -scrH, scrH, zNear, zFar);
   }
-#else
-  // ウィンドウの幅と高さ
-  int winW, winH;
-
+#  else
   // 視差
   GLfloat parallax;
 
@@ -91,70 +89,46 @@ class Window
   void updateStereoProjectionMatrix()
   {
     // 視差によるスクリーンのオフセット量
-#  if STEREO == OCULUS
-    const GLfloat shift(0.0f);
-#  else
     const GLfloat shift(parallax * zNear / screenDistance);
-#  endif
 
     // 立体視用の透視投影変換行列
     mpL.loadFrustum(-scrW + shift, scrW + shift, -scrH, scrH, zNear, zFar);
     mpR.loadFrustum(-scrW - shift, scrW - shift, -scrH, scrH, zNear, zFar);
   }
-#endif
-
-#if STEREO == OCULUS
+#  endif
+#else
   // Oculus Rift 表示用の FBO
-  GLuint ocuFbo[2];
+  GLuint ocuFbo;
 
   // Oculus Rift 表示用の FBO のカラーバッファに使うテクスチャ
-  GLuint ocuFboColor[2];
+  GLuint ocuFboColor;
 
   // Oculus Rift 表示用の FBO のデプスバッファに使うレンダーバッファ
   GLuint ocuFboDepth;
 
-  // Oculus Rift の画面のアスペクト比
-  GLfloat ocuAspect;
-
-  // Oculus Rift のレンズの中心の画面の中心からのずれ
-  GLfloat projectionCenterOffset;
-
-  // Oculus Rift のレンズの歪みの補正係数
-  GLfloat lensDistortion[4];
-
-  // Oculus Rift のレンズの拡大率の補正係数
-  GLfloat lensScale;
-
-  // Oculus Rift 表示に使う矩形
-  static GLuint ocuVao, ocuVbo;
-
-  // Oculus Rift 表示用のシェーダプログラム
-  static GLuint ocuProgram;
-
-  // Oculus Rift 表示用の FBO のテクスチャユニットの uniform 変数の場所
-  static GLint ocuFboColorLoc;
-
-  // Oculus Rift の画面のアスペクト比の uniform 変数の場所
-  static GLint ocuAspectLoc;
-
-  // Oculus Rift のレンズの中心の画面の中心からのずれの uniform 変数の場所
-  static GLint projectionCenterOffsetLoc;
-
-  // Oculus Rift のレンズの歪みの補正係数の uniform 変数の場所
-  static GLint lensDistortionLoc;
-
-  // Oculus Rift のレンズの拡大率の補正係数の uniform 変数の場所
-  static GLint lensScaleLoc;
-
   // Oculus Rift 表示用の FBO のレンダーターゲット
   static const GLenum ocuFboDrawBuffers[];
 
-  // Oculus Rift のヘッドトラッキングセンサ
-  static Ptr<DeviceManager> pManager;
-  Ptr<HMDDevice> pHmd;
-  Ptr<SensorDevice> pSensor;
-  HMDInfo hmdInfo;
-  SensorFusion sensorFusion;
+  // Oculus Rift 表示用の FBO のサイズ
+  ovrSizei renderTargetSize;
+
+  // Oculus Rift のビューポート
+  ovrRecti eyeRenderViewport[2];
+
+  // Oculus Rift のレンダリング情報
+  ovrEyeRenderDesc eyeRenderDesc[2];
+
+  // Oculus Rift の視点情報
+  ovrPosef eyePose[2];
+
+  // Oculus rift 表示用のレンダリングターゲットのテクスチャ
+  ovrGLTexture eyeTexture[2];
+
+  // Oculus Rift へのレンダリングのタイミング計測
+  ovrFrameTiming frameTiming;
+
+  // Oculus Rift のデバイス
+  const ovrHmd hmd;
 #endif
 
   // 参照カウント
@@ -166,7 +140,7 @@ class Window
   Window(const Window &w);
 
   //
-  // 代入 (コピー禁止)
+  // 代入 (代入禁止)
   //
   Window &operator=(const Window &w);
 
@@ -270,29 +244,59 @@ public:
   //
   //   ・左目の描画特有の処理を行う
   //
-  GgMatrix getMwL() const;
+  GgMatrix getMwL();
 
   //
   // 左目用のプロジェクション変換行列を得る
   //
+#  if STEREO != OCULUS
   const GgMatrix &getMpL() const
   {
     return mpL;
   }
+#  else
+  const GgMatrix getMpL() const
+  {
+    // Oculus Rift の左目の識別子
+    const ovrFovPort &fov(eyeRenderDesc[hmd->EyeRenderOrder[0]].Fov);
+
+    // 左目の透視投影変換行列
+    const GLfloat left(-fov.LeftTan * zNear);
+    const GLfloat right(fov.RightTan * zNear);
+    const GLfloat bottom(-fov.DownTan * zNear);
+    const GLfloat top(fov.UpTan * zNear);
+    return ggFrustum(left, right, bottom, top, zNear, zFar);
+  }
+#  endif
 
   //
   // 右目用のモデルビュー変換行列を得る
   //
   //   ・右目の描画特有の処理を行う
   //
-  GgMatrix getMwR() const;
+  GgMatrix getMwR();
 
   //
   // 右目用のプロジェクション変換行列を得る
   //
+#  if STEREO != OCULUS
   const GgMatrix &getMpR() const
   {
     return mpR;
   }
+#  else
+  const GgMatrix getMpR() const
+  {
+    // Oculus Rift の左目の識別子
+    const ovrFovPort &fov(eyeRenderDesc[hmd->EyeRenderOrder[1]].Fov);
+
+    // 左目の透視投影変換行列
+    const GLfloat left(-fov.LeftTan * zNear);
+    const GLfloat right(fov.RightTan * zNear);
+    const GLfloat bottom(-fov.DownTan * zNear);
+    const GLfloat top(fov.UpTan * zNear);
+    return ggFrustum(left, right, bottom, top, zNear, zFar);
+  }
+#  endif
 #endif
 };
