@@ -205,11 +205,14 @@ Window::~Window()
   --count;
 
 #if STEREO == OCULUS
-  // Oculus Rift のレンダリングの設定を初期設定に戻す
-  ovrHmd_ConfigureRendering(hmd, nullptr, 0, nullptr, nullptr);
+  if (hmd)
+  {
+    // Oculus Rift のレンダリングの設定を初期設定に戻す
+    ovrHmd_ConfigureRendering(hmd, nullptr, 0, nullptr, nullptr);
 
-  // Oculus Rift のデバイスを破棄する
-  ovrHmd_Destroy(hmd);
+    // Oculus Rift のデバイスを破棄する
+    ovrHmd_Destroy(hmd);
+  }
 #endif
 
   glfwDestroyWindow(window);
@@ -231,7 +234,7 @@ void Window::clear()
   glViewport(0, 0, winW, winH);
 #elif STEREO == OCULUS
   // フレームのタイミング計測開始
-  frameTiming = ovrHmd_BeginFrame(hmd, 0);
+  if (hmd) frameTiming = ovrHmd_BeginFrame(hmd, 0);
 
   // FBO に描画する
   glBindFramebuffer(GL_FRAMEBUFFER, ocuFbo);
@@ -261,31 +264,34 @@ void Window::swapBuffers()
   // カラーバッファを入れ替える
   glfwSwapBuffers(window);
 #else
-  // 健康と安全に関する警告の表示状態を取得する
-  ovrHSWDisplayState hswDisplayState;
-  ovrHmd_GetHSWDisplayState(hmd, &hswDisplayState);
-
-  // 警告表示をしていれば
-  if (hswDisplayState.Displayed)
+  if (hmd)
   {
-    if (key)
-    {
-      // 何かキーをタイプしていれば警告を消す
-      ovrHmd_DismissHSWDisplay(hmd);
-    }
-    else
-    {
-      // Oculus Rift を横から軽くたたいたかどうかを検出する
-      const ovrTrackingState ts(ovrHmd_GetTrackingState(hmd, ovr_GetTimeInSeconds()));
+    // 健康と安全に関する警告の表示状態を取得する
+    ovrHSWDisplayState hswDisplayState;
+    ovrHmd_GetHSWDisplayState(hmd, &hswDisplayState);
 
-      // 向きの変化が検出されたら
-      if (ts.StatusFlags & ovrStatus_OrientationTracked)
+    // 警告表示をしていれば
+    if (hswDisplayState.Displayed)
+    {
+      if (key)
       {
-        // 生のセンサーの加速度を取得する
-        const ovrVector3f a(ts.RawSensorData.Accelerometer);
+        // 何かキーをタイプしていれば警告を消す
+        ovrHmd_DismissHSWDisplay(hmd);
+      }
+      else
+      {
+        // Oculus Rift を横から軽くたたいたかどうかを検出する
+        const ovrTrackingState ts(ovrHmd_GetTrackingState(hmd, ovr_GetTimeInSeconds()));
 
-        // 加速度が一定以上だったら警告を消す
-        if (a.x * a.x + a.y * a.y + a.z * a.z > 10000.0f) ovrHmd_DismissHSWDisplay(hmd);
+        // 向きの変化が検出されたら
+        if (ts.StatusFlags & ovrStatus_OrientationTracked)
+        {
+          // 生のセンサーの加速度を取得する
+          const ovrVector3f a(ts.RawSensorData.Accelerometer);
+
+          // 加速度が一定以上だったら警告を消す
+          if (a.x * a.x + a.y * a.y + a.z * a.z > 10000.0f) ovrHmd_DismissHSWDisplay(hmd);
+        }
       }
     }
   }
@@ -397,7 +403,7 @@ void Window::swapBuffers()
   }
 #  else
   // フレームのタイミング計測終了
-  ovrHmd_EndFrame(hmd, eyePose, &eyeTexture[0].Texture);
+  if (hmd) ovrHmd_EndFrame(hmd, eyePose, &eyeTexture[0].Texture);
 #  endif
 #endif
 }
@@ -586,6 +592,8 @@ GgMatrix Window::getMwL()
   // 左目を左に動かす代わりにシーンを右に動かす
   return ggTranslate(parallax, 0.0f, 0.0f) * mv;
 #  else
+  if (!hmd) return mv;
+
   // Oculus Rift の左目の識別子
   const ovrEyeType &eyeL(hmd->EyeRenderOrder[0]);
 
@@ -630,6 +638,8 @@ GgMatrix Window::getMwR()
   // 右目を左に動かす代わりにシーンを左に動かす
   return ggTranslate(-parallax, 0.0f, 0.0f) * mv;
 #  else
+  if (!hmd) return mv;
+
   // Oculus Rift の右目の識別子
   const ovrEyeType &eyeR(hmd->EyeRenderOrder[1]);
 
