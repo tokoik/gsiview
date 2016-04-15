@@ -190,6 +190,18 @@ namespace
   }
 }
 
+namespace
+{
+  // Oculus Rift のセッションデータ
+  ovrSession session(nullptr);
+
+  // Oculus Rift のセッションを破棄する
+  void destroySession()
+  {
+    ovr_Destroy(session);
+  }
+}
+
 //
 // メインプログラム
 //
@@ -197,51 +209,78 @@ int main()
 {
 #if STEREO == OCULUS
   // Oculus Rift (LibOVR) を初期化する
-  ovr_Initialize();
+  if (OVR_FAILURE(ovr_Initialize(nullptr)))
+  {
+    // Oculus Rift の初期化に失敗した
+    MessageBox(nullptr, TEXT("Oculus Rift が初期化できません。"), TEXT("すまんのう"), MB_OK);
+    return EXIT_FAILURE;
+  }
 
   // プログラム終了時には LibOVR を終了する
   atexit(ovr_Shutdown);
+
+  // Oculus Rift のデバイスを作成する
+  ovrGraphicsLuid luid; // LUID は OpenGL では使っていないらしい
+  if (OVR_FAILURE(ovr_Create(&session, &luid)))
+  {
+    // Oculus Rift のデバイスが作成できない
+    MessageBox(nullptr, TEXT("Oculus Rift が使用できません。"), TEXT("すまんのう"), MB_OK);
+    return EXIT_FAILURE;
+  }
+
+  // プログラム終了時にはセッションを破棄する
+  atexit(destroySession);
 #endif
 
   // GLFW を初期化する
   if (glfwInit() == GL_FALSE)
   {
     // GLFW の初期化に失敗した
-#if defined(_WIN32)
     MessageBox(nullptr, TEXT("GLFW の初期化に失敗しました。"), TEXT("すまんのう"), MB_OK);
-#else
-    std::cerr << "Can't initialize GLFW." << std::endl;
-#endif
     return EXIT_FAILURE;
   }
 
   // プログラム終了時には GLFW を終了する
   atexit(glfwTerminate);
 
-  // OpenGL Version 3.2 Core Profile を選択する
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
-  glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+  // OpenGL ウィンドウの特性
+  glfwWindowHint(GLFW_SRGB_CAPABLE, GL_TRUE);
   glfwWindowHint(GLFW_STEREO, STEREO == QUADBUFFER);
+  glfwWindowHint(GLFW_DOUBLEBUFFER, STEREO != OCULUS);
 
-#if STEREO != NONE && !defined(_DEBUG)
-  // 接続されているモニタを捜す
-  int mcount;
-  GLFWmonitor **const monitors = glfwGetMonitors(&mcount);
+  // ディスプレイの情報
+  GLFWmonitor *monitor;
+  int window_width, window_height;
 
-  // セカンダリモニタがあればそれを使う
-  GLFWmonitor *const monitor(monitors[mcount > 1 ? useSecondary : 0]);
+  // フルスクリーン表示
+  if (STEREO != NONE && STEREO != OCULUS && !debug)
+  {
+    // 接続されているモニタの数を数える
+    int mcount;
+    GLFWmonitor **const monitors = glfwGetMonitors(&mcount);
 
-  // モニタのモードを調べる
-  const GLFWvidmode* mode(glfwGetVideoMode(monitor));
+    // セカンダリモニタがあればそれを使う
+    monitor = monitors[mcount > useSecondary ? useSecondary : 0];
 
-  // フルスクリーンでウィンドウを開く
-  Window window(mode->width, mode->height, "AIST Viewer (STEREO)", monitor);
-#else
-  // ウィンドウモードでウィンドウを開く
-  Window window(1920, 1080, "AIST Viewer");
-#endif
+    // モニタのモードを調べる
+    const GLFWvidmode *mode(glfwGetVideoMode(monitor));
+
+    // ウィンドウのサイズ (フルスクリーン)
+    window_width = mode->width;
+    window_height = mode->height;
+  }
+  else
+  {
+    // プライマリモニタをウィンドウモードで使う
+    monitor = nullptr;
+
+    // ウィンドウのサイズ
+    window_width = 960;
+    window_height = 540;
+  }
+
+  // ウィンドウを開く
+  Window window(window_width, window_height, "STER Display", monitor, nullptr, session);
   if (!window.get())
   {
     // ウィンドウが作成できなかった
@@ -286,36 +325,29 @@ int main()
   // 読み込んだ地形データを表示する際のスケール
   const GgMatrix mm(ggScale(demscale));
 
+  // 地形に貼り付けるテクスチャ
+  GLuint tex(0);
+
   // 地形に貼り付けるテクスチャの画像を読み込む
   cv::Mat src(cv::imread(texfile));
-  cv::Mat dst(cv::Size(texWidth, texHeight), CV_8UC3);
   if (src.data)
   {
-    // 画像が読み込めたら 2D テクスチャに使うサイズに拡大縮小する
-    cv::resize(src, dst, dst.size(), cv::INTER_LANCZOS4);
+    // テクスチャに読み込んだ画像を転送する
+    glGenTextures(1, &tex);
+    glBindTexture(GL_TEXTURE_2D, tex);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, src.cols, src.rows, 0,
+      GL_BGR, GL_UNSIGNED_BYTE, src.data);
+
+    // ミップマップを作成して有効にする
+    glGenerateMipmap(GL_TEXTURE_2D);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+
+    // 境界色は黒にしておく (これは Oculus Rift への表示時に表示範囲外の色になる)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, border);
   }
-  else
-  {
-    // 画像が読み込めていなかったら単一色を設定しておく
-    dst = cv::Scalar(20, 60, 20);
-  }
-
-  // テクスチャメモリを確保して読み込んだ画像を転送する
-  GLuint tex;
-  glGenTextures(1, &tex);
-  glBindTexture(GL_TEXTURE_2D, tex);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, texWidth, texHeight, 0,
-    GL_BGR, GL_UNSIGNED_BYTE, dst.data);
-
-  // ミップマップを作成して有効にする
-  glGenerateMipmap(GL_TEXTURE_2D);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-
-  // 境界色は黒にしておく (これは Oculus Rift への表示時に表示範囲外の色になる)
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-  glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, border);
 
 #if USE_ANISOTROPIC_FILTERING
   // 非対象フィルタリング拡張機能を有効にする
@@ -339,6 +371,9 @@ int main()
     // 画面クリア
     window.clear();
 
+    // 左の描画領域を選択する
+    window.selectL();
+
     // 描画用のシェーダプログラムの使用開始
     shader.use();
     shader.setLight(light);
@@ -349,24 +384,34 @@ int main()
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, tex);
 
-    // 図形データの指定
-    glBindVertexArray(mesh);
-
-#if STEREO == NONE
-    // 単眼のモデルビュープロジェクション変換行列を設定する
-    shader.loadMatrix(window.getMp(), window.getMw() * mm);
-
-    // 描画
-    glDrawElements(GL_TRIANGLES, count, GL_UNSIGNED_INT, 0);
-#else
     // 左目のモデルビュープロジェクション変換行列を設定する
     shader.loadMatrix(window.getMpL(), window.getMwL() * mm);
 
+    // 図形データの指定
+    glBindVertexArray(mesh);
+
     // 描画
     glDrawElements(GL_TRIANGLES, count, GL_UNSIGNED_INT, 0);
 
+#if STEREO != NONE
+    // 右の描画領域を選択する
+    window.selectR();
+
+    // 描画用のシェーダプログラムの使用開始
+    shader.use();
+    shader.setLight(light);
+    shader.setMaterial(material);
+    glUniform1i(cmapLoc, 0);
+
+    // テクスチャの指定
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, tex);
+
     // 右目のモデルビュープロジェクション変換行列を設定する
     shader.loadMatrix(window.getMpR(), window.getMwR() * mm);
+
+    // 図形データの指定
+    glBindVertexArray(mesh);
 
     // 描画
     glDrawElements(GL_TRIANGLES, count, GL_UNSIGNED_INT, 0);

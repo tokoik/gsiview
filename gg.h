@@ -40,6 +40,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #  endif
 #  pragma comment(lib, "opengl32.lib")
 #  define _USE_MATH_DEFINES
+#  define NOMINMAX
 #  include "glfw3.h"
 #  include "glext.h"
 extern PFNGLACCUMXOESPROC glAccumxOES;
@@ -2511,6 +2512,10 @@ extern PFNGLWINDOWPOS4IVMESAPROC glWindowPos4ivMESA;
 extern PFNGLWINDOWPOS4SMESAPROC glWindowPos4sMESA;
 extern PFNGLWINDOWPOS4SVMESAPROC glWindowPos4svMESA;
 extern PFNGLWRITEMASKEXTPROC glWriteMaskEXT;
+// Windows.h で再定義されるのを避ける
+#  if defined(APIENTRY)
+#    undef APIENTRY
+#  endif
 #elif defined(__APPLE__)
 #  define GLFW_INCLUDE_GLCOREARB
 #  include "glfw3.h"
@@ -2537,18 +2542,18 @@ namespace gg
   **
   **   OpenGL の API を呼び出し直後に実行すればエラーのあるときにメッセージを表示する.
   **
-  **   \param msg エラー発生時に標準エラー出力に出力する文字列. nullptr なら何も出力しない.
+  **   \param msg エラー発生時に標準エラー出力に出力する文字列. NULL なら何も出力しない.
   */
-  extern void ggError(const char *msg = nullptr);
+  extern void ggError(const char *msg = NULL);
 
   /*!
   ** \brief FBO のエラーをチェックする.
   **
   **   FBO の API を呼び出し直後に実行すればエラーのあるときにメッセージを表示する.
   **
-  **   \param msg エラー発生時に標準エラー出力に出力する文字列. nullptr なら何も出力しない.
+  **   \param msg エラー発生時に標準エラー出力に出力する文字列. NULL なら何も出力しない.
   */
-  extern void ggFBOError(const char *msg = nullptr);
+  extern void ggFBOError(const char *msg = NULL);
 
   /*!
   ** \brief 配列の内容を TGA ファイルに保存する.
@@ -2585,7 +2590,7 @@ namespace gg
   **   \param width 読み込んだファイルの横の画素数.
   **   \param height 読み込んだファイルの縦の画素数.
   **   \param format 読み込んだファイルの書式. GL_RED, G_RG, GL_BGR, G_BGRA.
-  **   \return 読み込みに成功すれば読み込んだデータのポインタ, 失敗すれば nullptr.
+  **   \return 読み込みに成功すれば読み込んだデータのポインタ, 失敗すれば NULL.
   */
   extern GLubyte *ggLoadTga(const char *name, GLsizei *width, GLsizei *height, GLenum *format);
 
@@ -2596,10 +2601,10 @@ namespace gg
   **   \param height テクスチャとして読み込むデータ image の縦の画素数.
   **   \param internal glTexImage2D() に指定するテクスチャの内部フォーマット.
   **   \param format glTexImage2D() に指定するデータ image のフォーマット.
-  **   \param image テクスチャとして読み込むデータ. nullptr ならテクスチャメモリの確保のみ.
+  **   \param image テクスチャとして読み込むデータ. NULL ならテクスチャメモリの確保のみ.
   */
   extern GLuint ggLoadTexture(GLsizei width, GLsizei height, GLenum internal,
-    GLenum format = GL_RGBA, const GLvoid *image = nullptr);
+    GLenum format = GL_RGBA, const GLvoid *image = NULL);
 
   /*!
   ** \brief TGA 画像ファイルをテクスチャとして読み込む.
@@ -2658,17 +2663,17 @@ namespace gg
   ** \brief シェーダのソースプログラムの文字列を読み込んでプログラムオブジェクトを作成する.
   **
   **   \param vsrc バーテックスシェーダのソースプログラムの文字列.
-  **   \param fsrc フラグメントシェーダのソースプログラムの文字列 (nullptr なら不使用).
-  **   \param gsrc ジオメトリシェーダのソースプログラムの文字列 (nullptr なら不使用).
+  **   \param fsrc フラグメントシェーダのソースプログラムの文字列 (NULL なら不使用).
+  **   \param gsrc ジオメトリシェーダのソースプログラムの文字列 (NULL なら不使用).
   **   \param nvarying フィードバックする varying 変数の数 (0 なら不使用).
-  **   \param varyings フィードバックする varying 変数のリスト (nullptr なら不使用).
+  **   \param varyings フィードバックする varying 変数のリスト (NULL なら不使用).
   **   \param vtext バーテックスシェーダのコンパイル時のメッセージに追加する文字列.
   **   \param ftext フラグメントシェーダのコンパイル時のメッセージに追加する文字列.
   **   \param gtext ジオメトリシェーダのコンパイル時のメッセージに追加する文字列.
   **   \return シェーダプログラムのプログラム名 (作成できなければ 0).
   */
-  extern GLuint ggCreateShader(const char *vsrc, const char *fsrc = nullptr, const char *gsrc = nullptr,
-    int nvarying = 0, const char *varyings[] = nullptr,
+  extern GLuint ggCreateShader(const char *vsrc, const char *fsrc = NULL, const char *gsrc = NULL,
+    int nvarying = 0, const char *varyings[] = NULL,
     const char *vtext = "vertex shader",
     const char *ftext = "fragment shader",
     const char *gtext = "geometry shader");
@@ -2677,14 +2682,14 @@ namespace gg
   ** \brief シェーダのソースファイルを読み込んでプログラムオブジェクトを作成する.
   **
   **   \param vert バーテックスシェーダのソースファイル名.
-  **   \param frag フラグメントシェーダのソースファイル名 (nullptr なら不使用).
-  **   \param geom ジオメトリシェーダのソースファイル名 (nullptr なら不使用).
+  **   \param frag フラグメントシェーダのソースファイル名 (NULL なら不使用).
+  **   \param geom ジオメトリシェーダのソースファイル名 (NULL なら不使用).
   **   \param nvarying フィードバックする varying 変数の数 (0 なら不使用).
-  **   \param varyings フィードバックする varying 変数のリスト (nullptr なら不使用).
+  **   \param varyings フィードバックする varying 変数のリスト (NULL なら不使用).
   **   \return シェーダプログラムのプログラム名 (作成できなければ 0).
   */
-  extern GLuint ggLoadShader(const char *vert, const char *frag = nullptr, const char *geom = nullptr,
-    int nvarying = 0, const char *varyings[] = nullptr);
+  extern GLuint ggLoadShader(const char *vert, const char *frag = NULL, const char *geom = NULL,
+    int nvarying = 0, const char *varyings[] = NULL);
 
   /*!
   ** \brief 3 要素の内積
@@ -4061,26 +4066,17 @@ namespace gg
     //! \brief x 軸中心に角度 a 回転する四元数を格納する.
     //!   \param a 回転角.
     //!   \return 格納された回転を表す四元数.
-    GgQuaternion &loadRotateX(GLfloat a)
-    {
-      return loadRotate(1.0f, 0.0f, 0.0f, a);
-    }
+    GgQuaternion &loadRotateX(GLfloat a);
 
     //! \brief y 軸中心に角度 a 回転する四元数を格納する.
     //!   \param a 回転角.
     //!   \return 格納された回転を表す四元数.
-    GgQuaternion &loadRotateY(GLfloat a)
-    {
-      return loadRotate(0.0f, 1.0f, 0.0f, a);
-    }
+    GgQuaternion &loadRotateY(GLfloat a);
 
     //! \brief z 軸中心に角度 a 回転する四元数を格納する.
     //!   \param v 軸ベクトルを表す GLfloat 型の 4 要素の配列.
     //!   \return 格納された回転を表す四元数.
-    GgQuaternion &loadRotateZ(GLfloat a)
-    {
-      return loadRotate(0.0f, 0.0f, 1.0f, a);
-    }
+    GgQuaternion &loadRotateZ(GLfloat a);
 
     //! \brief 四元数を (x, y, z) を軸として角度 a 回転した四元数を返す.
     //!   \param x 軸ベクトルの x 成分.
@@ -4827,7 +4823,7 @@ namespace gg
     //! \brief コンストラクタ.
     //!   \param target バッファオブジェクトのターゲット.
     //!   \param number データの数.
-    //!   \param data データが格納されている領域の先頭のポインタ (nullptr ならデータを転送しない).
+    //!   \param data データが格納されている領域の先頭のポインタ (NULL ならデータを転送しない).
     //!   \param usage バッファオブジェクトの使い方.
     GgBuffer<T>(GLenum target, GLuint number, const T *data, GLenum usage = GL_STATIC_DRAW)
     {
@@ -5019,7 +5015,7 @@ namespace gg
 
     //! \brief コンストラクタ.
     //!   \param nv 頂点数.
-    //!   \param pos この図形の頂点の位置のデータの配列 (nullptr ならデータを転送しない).
+    //!   \param pos この図形の頂点の位置のデータの配列 (NULL ならデータを転送しない).
     //!   \param mode 描画する基本図形の種類.
     //!   \param usage バッファオブジェクトの使い方.
     GgPoints(GLuint nv, const GLfloat (*pos)[3], GLenum mode = GL_POINTS, GLenum usage = GL_STATIC_DRAW)
@@ -5114,8 +5110,8 @@ namespace gg
 
     //! \brief コンストラクタ.
     //!   \param nv 頂点数.
-    //!   \param pos この図形の頂点の位置のデータの配列 (nullptr ならデータを転送しない).
-    //!   \param norm この図形の頂点の法線のデータの配列 (nullptr ならデータを転送しない).
+    //!   \param pos この図形の頂点の位置のデータの配列 (NULL ならデータを転送しない).
+    //!   \param norm この図形の頂点の法線のデータの配列 (NULL ならデータを転送しない).
     //!   \param mode 描画する基本図形の種類.
     //!   \param usage バッファオブジェクトの使い方.
     GgTriangles(GLuint nv, const GLfloat (*pos)[3], const GLfloat (*norm)[3],
@@ -5198,8 +5194,8 @@ namespace gg
 
     //! \brief コンストラクタ.
     //!   \param nv 頂点数.
-    //!   \param pos この図形の頂点の位置のデータの配列 (nullptr ならデータを転送しない).
-    //!   \param norm この図形の頂点の法線のデータの配列 (nullptr ならデータを転送しない).
+    //!   \param pos この図形の頂点の位置のデータの配列 (NULL ならデータを転送しない).
+    //!   \param norm この図形の頂点の法線のデータの配列 (NULL ならデータを転送しない).
     //!   \param nf 三角形数.
     //!   \param face 三角形の頂点インデックス.
     //!   \param mode 描画する基本図形の種類.
@@ -5342,7 +5338,7 @@ namespace gg
   **   \param norm メッシュの頂点の法線ベクトル.
   */
   extern GgElements *ggElementsMesh(int slices, int stacks,
-    const GLfloat (*pos)[3], const GLfloat (*norm)[3] = nullptr);
+    const GLfloat (*pos)[3], const GLfloat (*norm)[3] = NULL);
 
   /*!
   ** 球状に三角形データを生成する (Elements 形式).

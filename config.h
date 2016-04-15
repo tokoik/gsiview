@@ -10,7 +10,7 @@ using namespace gg;
 
 // 立体視の設定
 #define NONE          0                                 // 単眼視
-#define LINEBYLINE    1                                 // インターレース（未サポート）
+#define LINEBYLINE    1                                 // インターレース（未実装）
 #define TOPANDBOTTOM  2                                 // 上下
 #define SIDEBYSIDE    3                                 // 左右
 #define QUADBUFFER    4                                 // クワッドバッファステレオ
@@ -20,34 +20,27 @@ using namespace gg;
 #define STEREO        OCULUS
 
 // 立体視特有のパラメータ
-#if STEREO != NONE
 const int useSecondary(1);                              // 1 ならセカンダリモニタに表示
 const GLfloat initialParallax(0.032f);                  // 視差の初期値 (単位 m)
 const GLfloat parallaxStep(0.001f);                     // 視差の変更ステップ (単位 m)
-
-// Oculus Rift 固有のパラメータ
-#  if STEREO == OCULUS
-const GLfloat lensScaleStep(0.001f);                    // レンズの拡大率の補正係数の調整ステップ
-const GLfloat projectionCenterOffsetStep(0.001f);       // レンズの中心位置の調整ステップ
-const int backBufferMultisample(1);                     // マルチサンプリングのサンプル数
-#  endif
-#endif
 
 // 地形データ
 const char demfile[] = "dem.csv";                       // デジタル標高地図データ
 const GLfloat demscale[] = { 5.0f, 5.0f, 0.1f, 1.0f };  // 地図データのスケール
 const char texfile[] = "texture.png";                   // 地図のテクスチャ
-const GLsizei texWidth(2048), texHeight(2048);          // テクスチャメモリのサイズ
 #define USE_ANISOTROPIC_FILTERING 1                     // 1 なら非対称フィルタリング拡張機能を使う
 
 // カメラの初期状態 (単位 m)
-const GLfloat startPosition[] = { 0.0f, 0.0f, 20.0f };  // カメラの初期位置
-const GLfloat screenCenter(0.5f);                       // ディスプレイの中心位置 (高さの半分)
-const GLfloat screenDistance(1.5f);                     // 観測者とディスプレイ面との距離
+const GLfloat startPosition[] = { 0.0f, 0.0f, 1.0f };   // カメラの初期位置
+const GLfloat startPitch = -1.5707963f;                 // 最初は正面を向いている
+const GLfloat displayCenter(0.5f);                      // ディスプレイの中心位置 (高さの半分)
+const GLfloat displayDistance(1.5f);                    // 観測者とディスプレイ面との距離
 const GLfloat zNear(0.1f);                              // 前方面までの距離
-const GLfloat zFar(50.0f);                              // 後方面までの距離
+const GLfloat zFar(500.0f);                             // 後方面までの距離
+const GLfloat initialZoom(1.0f);                        // ズーム率
 
 // ナビゲーションの速度調整
+const double zoomStep(0.01);                            // 物体のズーム率調整のステップ
 const GLfloat speedScale(0.00002f);                     // フレームあたりの移動速度係数
 const GLfloat angleScale(0.00002f);                     // フレームあたりの回転速度係数
 #if defined(__APPLE__)
@@ -84,3 +77,10 @@ const GLfloat border[] = { 0.0, 0.0, 0.0, 0.0 };
 
 // 背景色
 const GLfloat back[] = { 0.2f, 0.3f, 0.4f, 0.0f };
+
+// デバッグモード
+#if defined(_DEBUG)
+const bool debug(true);
+#else
+const bool debug(false);
+#endif

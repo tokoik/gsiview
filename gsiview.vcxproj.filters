@@ -40,12 +40,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="oculus.frag">
-      <Filter>シェーダ― ファイル</Filter>
-    </None>
-    <None Include="oculus.vert">
-      <Filter>シェーダ― ファイル</Filter>
-    </None>
     <None Include="simple.frag">
       <Filter>シェーダ― ファイル</Filter>
     </None>

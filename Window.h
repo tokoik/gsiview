@@ -7,20 +7,21 @@
 // 各種設定
 #include "config.h"
 
-// Oculus Rift SDK ライブラリ (LibOVR) の組み込み
-#if STEREO == OCULUS
-#  if defined(_WIN32)
-#    define NOMINMAX
-#    define GLFW_EXPOSE_NATIVE_WIN32
-#    define GLFW_EXPOSE_NATIVE_WGL
-#    include "glfw3native.h"
-#    if defined(APIENTRY)
-#      undef APIENTRY
-#    endif
+// Windows API 関連の設定
+#if defined(_WIN32)
+#  define NOMINMAX
+#  define GLFW_EXPOSE_NATIVE_WIN32
+#  define GLFW_EXPOSE_NATIVE_WGL
+#  define OVR_OS_WIN32
+#  include "glfw3native.h"
+#  if defined(APIENTRY)
+#    undef APIENTRY
 #  endif
-#  include <OVR.h>
-#  include <OVR_CAPI_GL.h>
 #endif
+
+// Oculus Rift SDK ライブラリ (LibOVR) の組み込み
+#include <OVR.h>
+#include <OVR_CAPI_GL.h>
 
 //
 // ウィンドウ関連の処理を担当するクラス
@@ -29,6 +30,9 @@ class Window
 {
   // ウィンドウの識別子
   GLFWwindow *const window;
+
+  // スクリーンの高さ
+  const GLfloat screenHeight;
 
   // 最後にタイプしたキー
   int key;
@@ -54,85 +58,63 @@ class Window
   // モデルビュー変換行列
   GgMatrix mv;
 
-#if STEREO != OCULUS
-  // ウィンドウの幅と高さ
-  int winW, winH;
+  // ディスプレイのアスペクト比
+  GLfloat aspect;
+
+  // ズーム率
+  double zoom;
+
+  // ビューポートの幅と高さ
+  int width, height;
+
+  // 視差
+  GLfloat parallax;
+
+  // ヘッドトラッキングによる回転行列
+  GgMatrix moL, moR;
+
+  // 立体視用のモデルビュー変換行列
+  GgMatrix mwL, mwR;
+
+  // 立体視用の投影変換行列
+  GgMatrix mpL, mpR;
 
   // スクリーンの幅と高さ
-  GLfloat scrW, scrH;
+  GLfloat screenL[4], screenR[4];
 
-#  if STEREO == NONE
-  // 投影変換行列
-  GgMatrix mp;
+  // Oculus Rift のセッション
+  const ovrSession session;
+
+  // Oculus Rift の情報
+  ovrHmdDesc hmdDesc;
+
+  // Oculus Rift のレンダリング情報
+  ovrEyeRenderDesc eyeRenderDesc[ovrEye_Count];
+
+  // Oculus Rift の視点情報
+  ovrPosef eyePose[ovrEye_Count];
+
+  // Oculus Rift に転送する描画データ
+  ovrLayer_Union layerData;
+
+  // Oculus Rift 表示用の FBO
+  GLuint oculusFbo[ovrEye_Count];
+
+  // ミラー表示用のレンダリングターゲットのテクスチャ
+  ovrGLTexture *mirrorTexture;
+
+  // ミラー表示用の FBO
+  GLuint mirrorFbo;
+
+  // 参照カウント
+  static unsigned int count;
 
   //
   // 透視投影変換行列を求める
   //
   //   ・ウィンドウのサイズ変更時やカメラパラメータの変更時に呼び出す
   //
-  void updateProjectionMatrix()
-  {
-    mp.loadFrustum(-scrW, scrW, -scrH, scrH, zNear, zFar);
-  }
-#  else
-  // 視差
-  GLfloat parallax;
-
-  // 立体視用の投影変換行列
-  GgMatrix mpL, mpR;
-
-  //
-  // 立体視用の透視投影変換行列を求める
-  //
-  //   ・ウィンドウのサイズ変更時やカメラパラメータの変更時に呼び出す
-  //
-  void updateStereoProjectionMatrix()
-  {
-    // 視差によるスクリーンのオフセット量
-    const GLfloat shift(parallax * zNear / screenDistance);
-
-    // 立体視用の透視投影変換行列
-    mpL.loadFrustum(-scrW + shift, scrW + shift, -scrH, scrH, zNear, zFar);
-    mpR.loadFrustum(-scrW - shift, scrW - shift, -scrH, scrH, zNear, zFar);
-  }
-#  endif
-#else
-  // Oculus Rift 表示用の FBO
-  GLuint ocuFbo;
-
-  // Oculus Rift 表示用の FBO のカラーバッファに使うテクスチャ
-  GLuint ocuFboColor;
-
-  // Oculus Rift 表示用の FBO のデプスバッファに使うレンダーバッファ
-  GLuint ocuFboDepth;
-
-  // Oculus Rift 表示用の FBO のレンダーターゲット
-  static const GLenum ocuFboDrawBuffers[];
-
-  // Oculus Rift 表示用の FBO のサイズ
-  ovrSizei renderTargetSize;
-
-  // Oculus Rift のビューポート
-  ovrRecti eyeRenderViewport[2];
-
-  // Oculus Rift のレンダリング情報
-  ovrEyeRenderDesc eyeRenderDesc[2];
-
-  // Oculus Rift の視点情報
-  ovrPosef eyePose[2];
-
-  // Oculus rift 表示用のレンダリングターゲットのテクスチャ
-  ovrGLTexture eyeTexture[2];
-
-  // Oculus Rift へのレンダリングのタイミング計測
-  ovrFrameTiming frameTiming;
-
-  // Oculus Rift のデバイス
-  const ovrHmd hmd;
-#endif
-
-  // 参照カウント
-  static unsigned int count;
+  void updateProjectionMatrix();
 
   //
   // コピーコンストラクタ (コピー禁止)
@@ -149,8 +131,10 @@ public:
   //
   // コンストラクタ
   //
-  Window(int width = 640, int height = 480, const char *title = "GLFW Window",
-    GLFWmonitor *monitor = nullptr, GLFWwindow *share = nullptr);
+  Window(int width = 640, int height = 480, const char *title = "GLFW Window"
+    , GLFWmonitor *monitor = nullptr, GLFWwindow *share = nullptr
+    , ovrSession session = nullptr
+    );
 
   //
   // デストラクタ
@@ -222,81 +206,88 @@ public:
   //
   static void keyboard(GLFWwindow *window, int key, int scancode, int action, int mods);
 
-#if STEREO == NONE
   //
-  // モデルビュー変換行列を得る
+  // 設定値の初期化
   //
-  const GgMatrix &getMw() const
+  void reset();
+
+  //
+  // 左目用の描画設定
+  //
+  //   ・左目の図形の描画開始前に呼び出す
+  //   ・ビューポートの設定などを行う
+  //
+  void selectL();
+
+  //
+  // Oculus Rift のヘッド地ラッキングによる左目の回転行列を得る
+  //
+  const GgMatrix &getMoL() const
   {
-    return mv;
+    return moL;
   }
 
   //
-  // プロジェクション変換行列を得る
-  //
-  const GgMatrix &getMp() const
-  {
-    return mp;
-  }
-#else
-  //
   // 左目用のモデルビュー変換行列を得る
   //
-  //   ・左目の描画特有の処理を行う
-  //
-  GgMatrix getMwL();
+  const GgMatrix &getMwL() const
+  {
+    return mwL;
+  }
 
   //
   // 左目用のプロジェクション変換行列を得る
   //
-#  if STEREO != OCULUS
   const GgMatrix &getMpL() const
   {
     return mpL;
   }
-#  else
-  const GgMatrix getMpL() const
-  {
-    // Oculus Rift の左目の識別子
-    const ovrFovPort &fov(eyeRenderDesc[hmd->EyeRenderOrder[0]].Fov);
 
-    // 左目の透視投影変換行列
-    const GLfloat left(-fov.LeftTan * zNear);
-    const GLfloat right(fov.RightTan * zNear);
-    const GLfloat bottom(-fov.DownTan * zNear);
-    const GLfloat top(fov.UpTan * zNear);
-    return ggFrustum(left, right, bottom, top, zNear, zFar);
+  //
+  // 左目用のスクリーンの幅と高さを取り出す
+  //
+  const GLfloat *getScreenL() const
+  {
+    return screenL;
   }
-#  endif
+
+  //
+  // 右目用の描画設定
+  //
+  //   ・右目の図形の描画開始前に呼び出す
+  //   ・ビューポートの設定などを行う
+  //
+  void selectR();
+
+  //
+  // Oculus Rift のヘッド地ラッキングによる右目の回転行列を得る
+  //
+  const GgMatrix &getMoR() const
+  {
+    return moR;
+  }
 
   //
   // 右目用のモデルビュー変換行列を得る
   //
-  //   ・右目の描画特有の処理を行う
-  //
-  GgMatrix getMwR();
+  const GgMatrix &getMwR() const
+  {
+    return mwR;
+  }
 
   //
   // 右目用のプロジェクション変換行列を得る
   //
-#  if STEREO != OCULUS
   const GgMatrix &getMpR() const
   {
     return mpR;
   }
-#  else
-  const GgMatrix getMpR() const
-  {
-    // Oculus Rift の左目の識別子
-    const ovrFovPort &fov(eyeRenderDesc[hmd->EyeRenderOrder[1]].Fov);
 
-    // 左目の透視投影変換行列
-    const GLfloat left(-fov.LeftTan * zNear);
-    const GLfloat right(fov.RightTan * zNear);
-    const GLfloat bottom(-fov.DownTan * zNear);
-    const GLfloat top(fov.UpTan * zNear);
-    return ggFrustum(left, right, bottom, top, zNear, zFar);
+  //
+  // 右目用のスクリーンの幅と高さを取り出す
+  //
+  const GLfloat *getScreenR() const
+  {
+    return screenR;
   }
-#  endif
-#endif
 };
