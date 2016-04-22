@@ -190,6 +190,7 @@ namespace
   }
 }
 
+#if STEREO == OCULUS
 namespace
 {
   // Oculus Rift のセッションデータ
@@ -201,6 +202,7 @@ namespace
     ovr_Destroy(session);
   }
 }
+#endif
 
 //
 // メインプログラム
@@ -280,7 +282,11 @@ int main()
   }
 
   // ウィンドウを開く
-  Window window(window_width, window_height, "STER Display", monitor, nullptr, session);
+  Window window(window_width, window_height, "STER Display", monitor, nullptr
+#if STEREO == OCULUS
+    , session
+#endif
+    );
   if (!window.get())
   {
     // ウィンドウが作成できなかった
@@ -371,51 +377,30 @@ int main()
     // 画面クリア
     window.clear();
 
-    // 左の描画領域を選択する
-    window.selectL();
+    for (int eye = 0; eye < (STEREO == NONE ? 1 : 2); ++eye)
+    {
+      // 描画領域を選択する
+      window.select(eye);
 
-    // 描画用のシェーダプログラムの使用開始
-    shader.use();
-    shader.setLight(light);
-    shader.setMaterial(material);
-    glUniform1i(cmapLoc, 0);
+      // 描画用のシェーダプログラムの使用開始
+      shader.use();
+      shader.setLight(light);
+      shader.setMaterial(material);
+      glUniform1i(cmapLoc, 0);
 
-    // テクスチャの指定
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, tex);
+      // テクスチャの指定
+      glActiveTexture(GL_TEXTURE0);
+      glBindTexture(GL_TEXTURE_2D, tex);
 
-    // 左目のモデルビュープロジェクション変換行列を設定する
-    shader.loadMatrix(window.getMpL(), window.getMwL() * mm);
+      // 左目のモデルビュープロジェクション変換行列を設定する
+      shader.loadMatrix(window.getMp(eye), window.getMw(eye) * mm);
 
-    // 図形データの指定
-    glBindVertexArray(mesh);
+      // 図形データの指定
+      glBindVertexArray(mesh);
 
-    // 描画
-    glDrawElements(GL_TRIANGLES, count, GL_UNSIGNED_INT, 0);
-
-#if STEREO != NONE
-    // 右の描画領域を選択する
-    window.selectR();
-
-    // 描画用のシェーダプログラムの使用開始
-    shader.use();
-    shader.setLight(light);
-    shader.setMaterial(material);
-    glUniform1i(cmapLoc, 0);
-
-    // テクスチャの指定
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, tex);
-
-    // 右目のモデルビュープロジェクション変換行列を設定する
-    shader.loadMatrix(window.getMpR(), window.getMwR() * mm);
-
-    // 図形データの指定
-    glBindVertexArray(mesh);
-
-    // 描画
-    glDrawElements(GL_TRIANGLES, count, GL_UNSIGNED_INT, 0);
-#endif
+      // 描画
+      glDrawElements(GL_TRIANGLES, count, GL_UNSIGNED_INT, 0);
+    }
 
     // バッファを入れ替える
     window.swapBuffers();

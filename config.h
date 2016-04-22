@@ -17,12 +17,10 @@ using namespace gg;
 #define OCULUS        5                                 // Oculus Rift (HMD)
 
 // 立体視の方式
-#define STEREO        OCULUS
+#define STEREO        SIDEBYSIDE
 
-// 立体視特有のパラメータ
+// セカンダリモニタの使用
 const int useSecondary(1);                              // 1 ならセカンダリモニタに表示
-const GLfloat initialParallax(0.032f);                  // 視差の初期値 (単位 m)
-const GLfloat parallaxStep(0.001f);                     // 視差の変更ステップ (単位 m)
 
 // 地形データ
 const char demfile[] = "dem.csv";                       // デジタル標高地図データ
@@ -31,16 +29,20 @@ const char texfile[] = "texture.png";                   // 地図のテクスチャ
 #define USE_ANISOTROPIC_FILTERING 1                     // 1 なら非対称フィルタリング拡張機能を使う
 
 // カメラの初期状態 (単位 m)
-const GLfloat startPosition[] = { 0.0f, 0.0f, 1.0f };   // カメラの初期位置
-const GLfloat startPitch = -1.5707963f;                 // 最初は正面を向いている
+const GLfloat startPosition[] = { 0.0f, 0.0f, 5.0f };   // カメラの初期位置
+const GLfloat startPitch(-1.5707963f);                  // 最初は正面を向いている
 const GLfloat displayCenter(0.5f);                      // ディスプレイの中心位置 (高さの半分)
 const GLfloat displayDistance(1.5f);                    // 観測者とディスプレイ面との距離
 const GLfloat zNear(0.1f);                              // 前方面までの距離
 const GLfloat zFar(500.0f);                             // 後方面までの距離
-const GLfloat initialZoom(1.0f);                        // ズーム率
+
+// 視差
+const GLfloat initialParallax(0.032f);                  // 視差の初期値 (単位 m)
+const GLfloat parallaxStep(0.001f);                     // 視差の変更ステップ (単位 m)
 
 // ナビゲーションの速度調整
-const double zoomStep(0.01);                            // 物体のズーム率調整のステップ
+const GLfloat initialZoom(1.0f);                        // ズーム率の初期値
+const double zoomStep(0.01);                            // ズーム率調整のステップ
 const GLfloat speedScale(0.00002f);                     // フレームあたりの移動速度係数
 const GLfloat angleScale(0.00002f);                     // フレームあたりの回転速度係数
 #if defined(__APPLE__)

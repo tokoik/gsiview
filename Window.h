@@ -7,21 +7,21 @@
 // 各種設定
 #include "config.h"
 
-// Windows API 関連の設定
-#if defined(_WIN32)
-#  define NOMINMAX
-#  define GLFW_EXPOSE_NATIVE_WIN32
-#  define GLFW_EXPOSE_NATIVE_WGL
-#  define OVR_OS_WIN32
-#  include "glfw3native.h"
-#  if defined(APIENTRY)
-#    undef APIENTRY
-#  endif
-#endif
-
 // Oculus Rift SDK ライブラリ (LibOVR) の組み込み
-#include <OVR.h>
-#include <OVR_CAPI_GL.h>
+#if STEREO == OCULUS
+#  if defined(_WIN32)
+#    define NOMINMAX
+#    define GLFW_EXPOSE_NATIVE_WIN32
+#    define GLFW_EXPOSE_NATIVE_WGL
+#    define OVR_OS_WIN32
+#    include "glfw3native.h"
+#    if defined(APIENTRY)
+#      undef APIENTRY
+#    endif
+#  endif
+#  include <OVR.h>
+#  include <OVR_CAPI_GL.h>
+#endif
 
 //
 // ウィンドウ関連の処理を担当するクラス
@@ -71,17 +71,18 @@ class Window
   GLfloat parallax;
 
   // ヘッドトラッキングによる回転行列
-  GgMatrix moL, moR;
+  GgMatrix mo[2];
 
   // 立体視用のモデルビュー変換行列
-  GgMatrix mwL, mwR;
+  GgMatrix mw[2];
 
   // 立体視用の投影変換行列
-  GgMatrix mpL, mpR;
+  GgMatrix mp[2];
 
   // スクリーンの幅と高さ
-  GLfloat screenL[4], screenR[4];
+  GLfloat screen[2][4];
 
+#if STEREO == OCULUS
   // Oculus Rift のセッション
   const ovrSession session;
 
@@ -105,6 +106,7 @@ class Window
 
   // ミラー表示用の FBO
   GLuint mirrorFbo;
+#endif
 
   // 参照カウント
   static unsigned int count;
@@ -133,7 +135,9 @@ public:
   //
   Window(int width = 640, int height = 480, const char *title = "GLFW Window"
     , GLFWmonitor *monitor = nullptr, GLFWwindow *share = nullptr
+#if STEREO == OCULUS
     , ovrSession session = nullptr
+#endif
     );
 
   //
@@ -212,82 +216,42 @@ public:
   void reset();
 
   //
-  // 左目用の描画設定
+  // 描画設定
   //
   //   ・左目の図形の描画開始前に呼び出す
   //   ・ビューポートの設定などを行う
   //
-  void selectL();
+  void select(int eye);
 
   //
   // Oculus Rift のヘッド地ラッキングによる左目の回転行列を得る
   //
-  const GgMatrix &getMoL() const
+  const GgMatrix &getMo(int eye) const
   {
-    return moL;
+    return mo[eye];
   }
 
   //
   // 左目用のモデルビュー変換行列を得る
   //
-  const GgMatrix &getMwL() const
+  const GgMatrix &getMw(int eye) const
   {
-    return mwL;
+    return mw[eye];
   }
 
   //
   // 左目用のプロジェクション変換行列を得る
   //
-  const GgMatrix &getMpL() const
+  const GgMatrix &getMp(int eye) const
   {
-    return mpL;
+    return mp[eye];
   }
 
   //
   // 左目用のスクリーンの幅と高さを取り出す
   //
-  const GLfloat *getScreenL() const
+  const GLfloat *getScreen(int eye) const
   {
-    return screenL;
-  }
-
-  //
-  // 右目用の描画設定
-  //
-  //   ・右目の図形の描画開始前に呼び出す
-  //   ・ビューポートの設定などを行う
-  //
-  void selectR();
-
-  //
-  // Oculus Rift のヘッド地ラッキングによる右目の回転行列を得る
-  //
-  const GgMatrix &getMoR() const
-  {
-    return moR;
-  }
-
-  //
-  // 右目用のモデルビュー変換行列を得る
-  //
-  const GgMatrix &getMwR() const
-  {
-    return mwR;
-  }
-
-  //
-  // 右目用のプロジェクション変換行列を得る
-  //
-  const GgMatrix &getMpR() const
-  {
-    return mpR;
-  }
-
-  //
-  // 右目用のスクリーンの幅と高さを取り出す
-  //
-  const GLfloat *getScreenR() const
-  {
-    return screenR;
+    return screen[eye];
   }
 };
