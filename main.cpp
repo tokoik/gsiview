@@ -6,28 +6,46 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #if defined(_WIN32)
-#  include <windows.h>
-#  define _USE_MATH_DEFINES
+#  define OPENCVDIR "C:\\opencv"
+#  if defined(_WIN64)
+#    define PLATFORM "x64"
+#  else
+#    define PLATFORM "x86"
+#  endif
+#  if _MSC_VER >= 1900
+#    define VC "vc14"
+#  elif _MSC_VER >= 1800
+#    define VC "vc12"
+#  elif _MSC_VER >= 1700
+#    define VC "vc11"
+#  elif _MSC_VER >= 1600
+#    define VC "vc10"
+#  else
+#    error "Unsupported compiler version."
+#  endif
+#  define OPENCVLIBDIR OPENCVDIR "\\build\\" PLATFORM "\\" VC "\\lib\\" 
 #  define CV_VERSION_STR CVAUX_STR(CV_MAJOR_VERSION) CVAUX_STR(CV_MINOR_VERSION) CVAUX_STR(CV_SUBMINOR_VERSION)
 #  if defined(_DEBUG)
 #    define CV_EXT_STR "d.lib"
 #  else
 #    define CV_EXT_STR ".lib"
 #  endif
-#  pragma comment(lib, "ws2_32.lib")
 #  if CV_MAJOR_VERSION < 3
-#    pragma comment(lib, "IlmImf" CV_EXT_STR)
-#    pragma comment(lib, "libjpeg" CV_EXT_STR)
-#    pragma comment(lib, "libjasper" CV_EXT_STR)
-#    pragma comment(lib, "libpng" CV_EXT_STR)
-#    pragma comment(lib, "libtiff" CV_EXT_STR)
-#    pragma comment(lib, "zlib" CV_EXT_STR)
-#    pragma comment(lib, "opencv_core" CV_VERSION_STR CV_EXT_STR)
-#    pragma comment(lib, "opencv_highgui" CV_VERSION_STR CV_EXT_STR)
-#    pragma comment(lib, "opencv_imgproc" CV_VERSION_STR CV_EXT_STR)
+#    pragma comment(lib, OPENCVLIBDIR "IlmImf" CV_EXT_STR)
+#    pragma comment(lib, OPENCVLIBDIR "libjpeg" CV_EXT_STR)
+#    pragma comment(lib, OPENCVLIBDIR "libjasper" CV_EXT_STR)
+#    pragma comment(lib, OPENCVLIBDIR "libpng" CV_EXT_STR)
+#    pragma comment(lib, OPENCVLIBDIR "libtiff" CV_EXT_STR)
+#    pragma comment(lib, OPENCVLIBDIR "zlib" CV_EXT_STR)
+#    pragma comment(lib, OPENCVLIBDIR "opencv_core" CV_VERSION_STR CV_EXT_STR)
+#    pragma comment(lib, OPENCVLIBDIR "opencv_highgui" CV_VERSION_STR CV_EXT_STR)
+#    pragma comment(lib, OPENCVLIBDIR "opencv_imgproc" CV_VERSION_STR CV_EXT_STR)
 #  else
-#    pragma comment(lib, "opencv_world" CV_VERSION_STR CV_EXT_STR)
+#    pragma comment(lib, OPENCVLIBDIR "opencv_world" CV_VERSION_STR CV_EXT_STR)
 #  endif
+#  pragma comment(lib, "ws2_32.lib")
+#  define _USE_MATH_DEFINES
+#  include <windows.h>
 #endif
 
 // ïWèÄÉâÉCÉuÉâÉä

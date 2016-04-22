@@ -17,7 +17,7 @@ using namespace gg;
 #define OCULUS        5                                 // Oculus Rift (HMD)
 
 // 立体視の方式
-#define STEREO        SIDEBYSIDE
+#define STEREO        OCULUS
 
 // セカンダリモニタの使用
 const int useSecondary(1);                              // 1 ならセカンダリモニタに表示

@@ -6,7 +6,7 @@
 
 // Oculus Rift SDK ライブラリ (LibOVR) の組み込み
 #if STEREO == OCULUS && defined(_WIN32)
-#  define OCULUSSDK "D:\\OculusSDK"
+#  define OCULUSDIR "C:\\OculusSDK"
 #  if defined(_WIN64)
 #    define PLATFORM "x64"
 #  else
@@ -23,7 +23,7 @@
 #  else
 #    error "Unsupported compiler version."
 #  endif
-#  pragma comment(lib, OCULUSSDK "\\LibOVR\\Lib\\Windows\\" PLATFORM "\\Release\\" VS "\\libOVR.lib")
+#  pragma comment(lib, OCULUSDIR "\\LibOVR\\Lib\\Windows\\" PLATFORM "\\Release\\" VS "\\libOVR.lib")
 #  pragma comment(lib, "winmm.lib")
 // Oculus Rift の目の識別子
 const int eyeL(ovrEye_Left), eyeR(ovrEye_Right);
