@@ -27,21 +27,12 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #if defined(_WIN32)
 #  pragma warning(disable:4996)
-#  if defined(_DEBUG)
-#    define GLFW3_EXT_STR "d.lib"
-#  else
-#    define GLFW3_EXT_STR ".lib"
+#  if !defined(_DEBUG)
 #    pragma comment(linker, "/subsystem:\"windows\" /entry:\"mainCRTStartup\"")
 #  endif
-#  if defined(_WIN64)
-#    pragma comment(lib, "glfw3-64" GLFW3_EXT_STR)
-#  else
-#    pragma comment(lib, "glfw3" GLFW3_EXT_STR)
-#  endif
-#  pragma comment(lib, "opengl32.lib")
 #  define _USE_MATH_DEFINES
 #  define NOMINMAX
-#  include "glfw3.h"
+#  include <GLFW/glfw3.h>
 #  include "glext.h"
 extern PFNGLACCUMXOESPROC glAccumxOES;
 extern PFNGLACTIVEPROGRAMEXTPROC glActiveProgramEXT;
@@ -2673,7 +2664,7 @@ namespace gg
   **   \return シェーダプログラムのプログラム名 (作成できなければ 0).
   */
   extern GLuint ggCreateShader(const char *vsrc, const char *fsrc = NULL, const char *gsrc = NULL,
-    int nvarying = 0, const char *varyings[] = NULL,
+    int nvarying = 0, const char *const varyings[] = NULL,
     const char *vtext = "vertex shader",
     const char *ftext = "fragment shader",
     const char *gtext = "geometry shader");
@@ -2689,7 +2680,7 @@ namespace gg
   **   \return シェーダプログラムのプログラム名 (作成できなければ 0).
   */
   extern GLuint ggLoadShader(const char *vert, const char *frag = NULL, const char *geom = NULL,
-    int nvarying = 0, const char *varyings[] = NULL);
+    int nvarying = 0, const char *const varyings[] = NULL);
 
   /*!
   ** \brief 3 要素の内積

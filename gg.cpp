@@ -6426,7 +6426,7 @@ static GLboolean printProgramInfoLog(GLuint program)
 **   \return シェーダプログラムのプログラム名 (作成できなければ 0).
 */
 GLuint gg::ggCreateShader(const char *vsrc, const char *fsrc, const char *gsrc,
-  GLint nvarying, const char *varyings[],
+  GLint nvarying, const char *const varyings[],
   const char *vtext, const char *ftext, const char *gtext)
 {
   // シェーダプログラムの作成
@@ -6556,7 +6556,7 @@ static GLchar *readShaderSource(const char *name)
 **   \return シェーダプログラムのプログラム名 (作成できなければ 0).
 */
 GLuint gg::ggLoadShader(const char *vert, const char *frag, const char *geom,
-  GLint nvarying, const char *varyings[])
+  GLint nvarying, const char *const varyings[])
 {
   // シェーダのソースファイルを読み込む
   const GLchar *const vsrc(readShaderSource(vert));
