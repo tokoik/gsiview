@@ -18,21 +18,25 @@ DerivedData/
 # for Windows
 #
 Thumbs.db
+/Debug/
+/Release/
+/x64/
+/ipch/
+!/packages/
 *.com
 *.exe
 *.ncb
 *.suo
-*.vcproj.*.*.user
 *.sdf
 *.opensdf
-Debug/
-Release/
-ipch/
-*.dep
+
 #
 # anothre stuff
 #
 *~
 *.bak
+*.tmp
+*.swp
+*.dep
 *.csv
 *.png

@@ -46,5 +46,6 @@
     <None Include="simple.vert">
       <Filter>シェーダ― ファイル</Filter>
     </None>
+    <None Include="packages.config" />
   </ItemGroup>
 </Project>
