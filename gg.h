@@ -2535,7 +2535,7 @@ namespace gg
   **
   **   \param msg エラー発生時に標準エラー出力に出力する文字列. NULL なら何も出力しない.
   */
-  extern void ggError(const char *msg = NULL);
+  extern void ggError(const char *name = nullptr, unsigned int line = 0);
 
   /*!
   ** \brief FBO のエラーをチェックする.
@@ -2544,7 +2544,7 @@ namespace gg
   **
   **   \param msg エラー発生時に標準エラー出力に出力する文字列. NULL なら何も出力しない.
   */
-  extern void ggFBOError(const char *msg = NULL);
+  extern void ggFBOError(const char *name = nullptr, unsigned int line = 0);
 
   /*!
   ** \brief 配列の内容を TGA ファイルに保存する.

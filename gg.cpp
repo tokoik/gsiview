@@ -5008,13 +5008,18 @@ void gg::ggInit()
 **
 **   \param msg エラー発生時に標準エラー出力に出力する文字列. NULL なら何も出力しない.
 */
-void gg::ggError(const char *msg)
+void gg::ggError(const char *name, unsigned int line)
 {
   const GLenum error(glGetError());
 
   if (error != GL_NO_ERROR)
   {
-    if (msg) std::cerr << msg << ": ";
+    if (name)
+    {
+      std::cerr << name;
+      if (line > 0) std::cerr << " (" << line << ")";
+      std::cerr << ": ";
+    }
 
     switch (error)
     {
@@ -5047,13 +5052,18 @@ void gg::ggError(const char *msg)
 **
 **   \param msg エラー発生時に標準エラー出力に出力する文字列. NULL なら何も出力しない.
 */
-void gg::ggFBOError(const char *msg)
+void gg::ggFBOError(const char *name, unsigned int line)
 {
   const GLenum status(glCheckFramebufferStatus(GL_FRAMEBUFFER));
 
   if (status != GL_FRAMEBUFFER_COMPLETE)
   {
-    if (msg) std::cerr << msg << ": ";
+    if (name)
+    {
+      std::cerr << name;
+      if (line > 0) std::cerr << " (" << line << ")";
+      std::cerr << ": ";
+    }
 
     switch (status)
     {
