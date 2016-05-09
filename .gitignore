@@ -22,7 +22,7 @@ Thumbs.db
 /Release/
 /x64/
 /ipch/
-!/packages/
+/packages/
 *.com
 *.exe
 *.ncb
