@@ -1,10 +1,11 @@
 #
 # for Linux
 #
-*.o
-core
-a.out
 gsiview
+a.out
+core
+*.o
+*.dep
 #
 # for Mac
 #
@@ -12,31 +13,28 @@ gsiview
 *.xcodeproj/*
 !project.pbxproj
 *.xcuserdatad/
-build/
 DerivedData/
 #
 # for Windows
 #
-Thumbs.db
 /Debug/
 /Release/
 /x64/
 /ipch/
 /packages/
+Thumbs.db
 *.com
 *.exe
 *.ncb
 *.suo
 *.sdf
 *.opensdf
-
+*.tmp
+*.swp
 #
 # anothre stuff
 #
 *~
 *.bak
-*.tmp
-*.swp
-*.dep
 *.csv
 *.png

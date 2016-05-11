@@ -5508,7 +5508,7 @@ namespace gg
     //!   \param mw GLfloat 型の 16 要素の配列に格納されたモデルビュー変換行列.
     virtual void loadMatrix(const GLfloat *mp, const GLfloat *mw)
     {
-      GgMatrix tmp(mp), tmw(mw);
+      const GgMatrix tmp(mp), tmw(mw);
       loadMatrix(tmp, tmw);
     }
   };
@@ -5750,7 +5750,7 @@ namespace gg
     //!   \param mw GLfloat 型の 16 要素の配列に格納されたモデルビュー変換行列.
     virtual void loadMatrix(const GLfloat *mp, const GLfloat *mw)
     {
-      GgMatrix tmp(mp), tmw(mw);
+      const GgMatrix tmp(mp), tmw(mw);
       loadMatrix(tmp, tmw);
     }
 

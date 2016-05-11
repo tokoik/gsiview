@@ -134,11 +134,7 @@ public:
   // コンストラクタ
   //
   Window(int width = 640, int height = 480, const char *title = "GLFW Window"
-    , GLFWmonitor *monitor = nullptr, GLFWwindow *share = nullptr
-#if STEREO == OCULUS
-    , ovrSession session = nullptr
-#endif
-    );
+    , GLFWmonitor *monitor = nullptr, GLFWwindow *share = nullptr);
 
   //
   // デストラクタ

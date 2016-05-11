@@ -171,20 +171,6 @@ namespace
   }
 }
 
-#if STEREO == OCULUS
-namespace
-{
-  // Oculus Rift のセッションデータ
-  ovrSession session(nullptr);
-
-  // Oculus Rift のセッションを破棄する
-  void destroySession()
-  {
-    ovr_Destroy(session);
-  }
-}
-#endif
-
 //
 // メインプログラム
 //
@@ -195,31 +181,27 @@ int main()
   if (OVR_FAILURE(ovr_Initialize(nullptr)))
   {
     // Oculus Rift の初期化に失敗した
+#if defined(_WIN32)
     MessageBox(nullptr, TEXT("Oculus Rift が初期化できません。"), TEXT("すまんのう"), MB_OK);
+#else
+    std::cerr << "Can't initialize Oculus Rift." << std::endl;
+#endif
     return EXIT_FAILURE;
   }
 
   // プログラム終了時には LibOVR を終了する
   atexit(ovr_Shutdown);
-
-  // Oculus Rift のデバイスを作成する
-  ovrGraphicsLuid luid; // LUID は OpenGL では使っていないらしい
-  if (OVR_FAILURE(ovr_Create(&session, &luid)))
-  {
-    // Oculus Rift のデバイスが作成できない
-    MessageBox(nullptr, TEXT("Oculus Rift が使用できません。"), TEXT("すまんのう"), MB_OK);
-    return EXIT_FAILURE;
-  }
-
-  // プログラム終了時にはセッションを破棄する
-  atexit(destroySession);
 #endif
 
   // GLFW を初期化する
   if (glfwInit() == GL_FALSE)
   {
     // GLFW の初期化に失敗した
+#if defined(_WIN32)
     MessageBox(nullptr, TEXT("GLFW の初期化に失敗しました。"), TEXT("すまんのう"), MB_OK);
+#else
+    std::cerr << "Can't initialize GLFW." << std::endl;
+#endif
     return EXIT_FAILURE;
   }
 
@@ -263,11 +245,7 @@ int main()
   }
 
   // ウィンドウを開く
-  Window window(window_width, window_height, "STER Display", monitor, nullptr
-#if STEREO == OCULUS
-    , session
-#endif
-    );
+  Window window(window_width, window_height, "STER Display", monitor);
   if (!window.get())
   {
     // ウィンドウが作成できなかった

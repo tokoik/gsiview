@@ -39,20 +39,14 @@ const int axesOffset(0);
 const int axesOffset(1);
 #endif
 
-
-
 //
 // コンストラクタ
 //
-Window::Window(int width, int height, const char *title, GLFWmonitor *monitor, GLFWwindow *share
-#if STEREO == OCULUS
-  , ovrSession session
-#endif
-  )
+Window::Window(int width, int height, const char *title, GLFWmonitor *monitor, GLFWwindow *share)
   : window(glfwCreateWindow(width, height, title, monitor, share))
   , screenHeight(zNear * displayCenter / displayDistance)
 #if STEREO == OCULUS
-  , session(session)
+  , session(nullptr)
 #endif
 {
   // ウィンドウが開かれていなかったら戻る
@@ -61,12 +55,103 @@ Window::Window(int width, int height, const char *title, GLFWmonitor *monitor, G
   // 設定を初期化する
   reset();
 
+  // 現在のウィンドウを処理対象にする
+  glfwMakeContextCurrent(window);
+
+  // ゲームグラフィックス特論の都合にもとづく初期化を行う
+  ggInit();
+
+#if STEREO == OCULUS
+  //
+  // Oculus Rift の設定
+  //
+
+  // LUID は OpenGL では使っていないらしい
+  ovrGraphicsLuid luid;
+
+  // Oculus Rift のセッションを作成する
+  if (OVR_FAILURE(ovr_Create(&const_cast<ovrSession>(session), &luid)))
+  {
+    // 表示用のウィンドウを破棄する
+    glfwDestroyWindow(window);
+    const_cast<GLFWwindow *>(window) = nullptr;
+    return;
+  }
+
+  // Oculus Rift の情報を取り出す
+  hmdDesc = ovr_GetHmdDesc(session);
+
+#  if defined(_DEBUG)
+  // Oculus Rift の情報を表示する
+  std::cout
+    << "\nProduct name: " << hmdDesc.ProductName
+    << "\nResolution:   " << hmdDesc.Resolution.w << " x " << hmdDesc.Resolution.h
+    << "\nDefault Fov:  (" << hmdDesc.DefaultEyeFov[ovrEye_Left].LeftTan
+    << "," << hmdDesc.DefaultEyeFov[ovrEye_Left].DownTan
+    << ") - (" << hmdDesc.DefaultEyeFov[ovrEye_Left].RightTan
+    << "," << hmdDesc.DefaultEyeFov[ovrEye_Left].UpTan
+    << ")\n              (" << hmdDesc.DefaultEyeFov[ovrEye_Right].LeftTan
+    << "," << hmdDesc.DefaultEyeFov[ovrEye_Right].DownTan
+    << ") - (" << hmdDesc.DefaultEyeFov[ovrEye_Right].RightTan
+    << "," << hmdDesc.DefaultEyeFov[ovrEye_Right].UpTan
+    << ")\nMaximum Fov:  (" << hmdDesc.MaxEyeFov[ovrEye_Left].LeftTan
+    << "," << hmdDesc.MaxEyeFov[ovrEye_Left].DownTan
+    << ") - (" << hmdDesc.MaxEyeFov[ovrEye_Left].RightTan
+    << "," << hmdDesc.MaxEyeFov[ovrEye_Left].UpTan
+    << ")\n              (" << hmdDesc.MaxEyeFov[ovrEye_Right].LeftTan
+    << "," << hmdDesc.MaxEyeFov[ovrEye_Right].DownTan
+    << ") - (" << hmdDesc.MaxEyeFov[ovrEye_Right].RightTan
+    << "," << hmdDesc.MaxEyeFov[ovrEye_Right].UpTan
+    << ")\n" << std::endl;
+#  endif
+
+  // Oculus Rift 表示用の FBO を作成する
+  for (int eye = 0; eye < ovrEye_Count; ++eye)
+  {
+    // Oculus Rift 表示用の FBO のサイズ
+    const auto renderTargetSize(ovr_GetFovTextureSize(session, ovrEyeType(eye), hmdDesc.DefaultEyeFov[eye], 1.0f));
+
+    // Oculus Rift のレンズ補正等の設定値
+    eyeRenderDesc[eye] = ovr_GetRenderDesc(session, ovrEyeType(eye), hmdDesc.DefaultEyeFov[eye]);
+
+    // Oculus Rift 表示用の FBO のカラーバッファとして使うテクスチャセットの作成
+    ovrSwapTextureSet *colorTexture;
+    ovr_CreateSwapTextureSetGL(session, GL_SRGB8_ALPHA8, renderTargetSize.w, renderTargetSize.h, &colorTexture);
+
+    // Oculus Rift 表示用の FBO のデプスバッファとして使うテクスチャセットの作成
+    ovrSwapTextureSet *depthTexture;
+    ovr_CreateSwapTextureSetGL(session, GL_DEPTH_COMPONENT32F, renderTargetSize.w, renderTargetSize.h, &depthTexture);
+
+    // Oculus Rift に転送する描画データを作成する
+    layerData.Header.Type = ovrLayerType_EyeFovDepth;
+    layerData.Header.Flags = ovrLayerFlag_TextureOriginAtBottomLeft;   // OpenGL なので左下が原点
+    layerData.EyeFov.ColorTexture[eye] = colorTexture;
+    layerData.EyeFovDepth.DepthTexture[eye] = depthTexture;
+    layerData.EyeFov.Viewport[eye].Pos = OVR::Vector2i(0, 0);
+    layerData.EyeFov.Viewport[eye].Size = renderTargetSize;
+    layerData.EyeFov.Fov[eye] = hmdDesc.DefaultEyeFov[eye];
+  }
+
+  // ミラー表示用の FBO を作成する
+  if (OVR_SUCCESS(ovr_CreateMirrorTextureGL(session, GL_SRGB8_ALPHA8, width, height, reinterpret_cast<ovrTexture **>(&mirrorTexture))))
+  {
+    glGenFramebuffers(1, &mirrorFbo);
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, mirrorFbo);
+    glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, mirrorTexture->OGL.TexId, 0);
+    glFramebufferRenderbuffer(GL_READ_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, 0);
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+  }
+
+  // Oculus Rift のレンダリング用の FBO を作成する
+  glGenFramebuffers(ovrEye_Count, oculusFbo);
+
+  // Oculus Rift にレンダリングするときは sRGB カラースペースを使う
+  glEnable(GL_FRAMEBUFFER_SRGB);
+#endif
+
   //
   // ウィンドウの設定
   //
-
-  // 現在のウィンドウを処理対象にする
-  glfwMakeContextCurrent(window);
 
   // ウィンドウのサイズ変更時に呼び出す処理を登録する
   glfwSetFramebufferSizeCallback(window, resize);
@@ -85,9 +170,6 @@ Window::Window(int width, int height, const char *title, GLFWmonitor *monitor, G
 
   // このインスタンスの this ポインタを記録しておく
   glfwSetWindowUserPointer(window, this);
-
-  // ゲームグラフィックス特論の都合にもとづく初期化を行う
-  ggInit();
 
   //
   // ジョイスティックの設定
@@ -111,74 +193,6 @@ Window::Window(int width, int height, const char *title, GLFWmonitor *monitor, G
       origin[3] = axes[3 + axesOffset];
     }
   }
-
-#if STEREO == OCULUS
-  //
-  // Oculus Rift の設定
-  //
-
-  // Oculus Rift 使用時
-  if (session)
-  {
-    // Oculus Rift の情報を取り出す
-    hmdDesc = ovr_GetHmdDesc(session);
-
-#  if defined(_DEBUG)
-    // Oculus Rift の情報を表示する
-    std::cout
-      << "\nProduct name: " << hmdDesc.ProductName
-      << "\nResolution:   " << hmdDesc.Resolution.w << " x " << hmdDesc.Resolution.h
-      << "\nScreen Size:  " << hmdDesc.CameraFrustumHFovInRadians
-      << " x " << hmdDesc.CameraFrustumVFovInRadians
-      << "\nDepth Range:   " << hmdDesc.CameraFrustumNearZInMeters
-      << "-  " << hmdDesc.CameraFrustumFarZInMeters
-      << "\n" << std::endl;
-#  endif
-
-    // Oculus Rift 表示用の FBO を作成する
-    for (int eye = 0; eye < ovrEye_Count; ++eye)
-    {
-      // Oculus Rift 表示用の FBO のサイズ
-      const auto renderTargetSize(ovr_GetFovTextureSize(session, ovrEyeType(eye), hmdDesc.DefaultEyeFov[eye], 1.0f));
-
-      // Oculus Rift のレンズ補正等の設定値
-      eyeRenderDesc[eye] = ovr_GetRenderDesc(session, ovrEyeType(eye), hmdDesc.DefaultEyeFov[eye]);
-
-      // Oculus Rift 表示用の FBO のカラーバッファとして使うテクスチャセットの作成
-      ovrSwapTextureSet *colorTexture;
-      ovr_CreateSwapTextureSetGL(session, GL_SRGB8_ALPHA8, renderTargetSize.w, renderTargetSize.h, &colorTexture);
-
-      // Oculus Rift 表示用の FBO のデプスバッファとして使うテクスチャセットの作成
-      ovrSwapTextureSet *depthTexture;
-      ovr_CreateSwapTextureSetGL(session, GL_DEPTH_COMPONENT32F, renderTargetSize.w, renderTargetSize.h, &depthTexture);
-
-      // Oculus Rift に転送する描画データを作成する
-      layerData.Header.Type = ovrLayerType_EyeFovDepth;
-      layerData.Header.Flags = ovrLayerFlag_TextureOriginAtBottomLeft;   // OpenGL なので左下が原点
-      layerData.EyeFov.ColorTexture[eye] = colorTexture;
-      layerData.EyeFovDepth.DepthTexture[eye] = depthTexture;
-      layerData.EyeFov.Viewport[eye].Pos = OVR::Vector2i(0, 0);
-      layerData.EyeFov.Viewport[eye].Size = renderTargetSize;
-      layerData.EyeFov.Fov[eye] = hmdDesc.DefaultEyeFov[eye];
-    }
-
-    // ミラー表示用の FBO を作成する
-    if (OVR_SUCCESS(ovr_CreateMirrorTextureGL(session, GL_SRGB8_ALPHA8, width, height, reinterpret_cast<ovrTexture **>(&mirrorTexture))))
-    {
-      glGenFramebuffers(1, &mirrorFbo);
-      glBindFramebuffer(GL_READ_FRAMEBUFFER, mirrorFbo);
-      glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, mirrorTexture->OGL.TexId, 0);
-      glFramebufferRenderbuffer(GL_READ_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, 0);
-      glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
-    }
-
-    // Oculus Rift のレンダリング用の FBO を作成する
-    glGenFramebuffers(ovrEye_Count, oculusFbo);
-
-    // Oculus Rift にレンダリングするときは sRGB カラースペースを使う
-    glEnable(GL_FRAMEBUFFER_SRGB);
-  }
-#endif
 
   // 投影変換行列・ビューポートを初期化する
   resize(window, width, height);
@@ -205,6 +219,10 @@ Window::~Window()
     // ミラー表示用の FBO を削除する
     glDeleteFramebuffers(1, &mirrorFbo);
 
+    // ミラー表示に使ったテクスチャを開放する
+    glDeleteTextures(1, &mirrorTexture->OGL.TexId);
+    ovr_DestroyMirrorTexture(session, reinterpret_cast<ovrTexture *>(mirrorTexture));
+
     // Oculus Rift 表示用の FBO を削除する
     for (int eye = 0; eye < ovrEye_Count; ++eye)
     {
@@ -212,21 +230,26 @@ Window::~Window()
       glDeleteFramebuffers(1, &oculusFbo[eye]);
 
       // レンダリングターゲットに使ったテクスチャを開放する
-      const auto *const colorTexture(layerData.EyeFov.ColorTexture[eye]);
+      auto *const colorTexture(layerData.EyeFov.ColorTexture[eye]);
       for (int i = 0; i < colorTexture->TextureCount; ++i)
       {
         const auto *const ctex(reinterpret_cast<ovrGLTexture *>(&colorTexture->Textures[i]));
         glDeleteTextures(1, &ctex->OGL.TexId);
       }
+      ovr_DestroySwapTextureSet(session, colorTexture);
 
       // デプスバッファとして使ったテクスチャを開放する
-      const auto *const depthTexture(layerData.EyeFovDepth.DepthTexture[eye]);
+      auto *const depthTexture(layerData.EyeFovDepth.DepthTexture[eye]);
       for (int i = 0; i < depthTexture->TextureCount; ++i)
       {
         const auto *const dtex(reinterpret_cast<ovrGLTexture *>(&depthTexture->Textures[i]));
         glDeleteTextures(1, &dtex->OGL.TexId);
       }
+      ovr_DestroySwapTextureSet(session, depthTexture);
     }
+
+    // Oculus Rift のセッションを破棄する
+    ovr_Destroy(session);
   }
 #endif
 
