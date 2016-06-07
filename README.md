@@ -34,14 +34,16 @@ GLFW で Oculus を使うサンプルとして見ていただけると幸いで�
 
 プログラムのビルド
 ------------------
-プログラムのパッケージには，Windows 用の Visual Studio 2013 のプロジェクト，
-Mac OS X 用の Xcode 5 のプロジェクト，および Linux 用の Makefile を含めています．
+プログラムのパッケージには，Windows 用の Visual Studio 2013 のプロジェクトを含めています.
 ビルドするには Oculus SDK 0.8beta，OpenCV 2.4.12，および GLFW 3.1.2 が必要です．
-ただし Windows と Mac OS X については，パッケージに GLFW を含めています．
+Windows と Mac OS X については，パッケージに GLFW を含めています．
+
+    Oculus SDK 0.8beta に対応して DK2 も使えるようにしました．
+
+Mac OS X 用の Xcode 5 のプロジェクト，および Linux 用の Makefile も含めていますが，
+Oculus SDK 0.8beta がこれらをサポートしていないため，ビルドすることはできません．
 OpenCV は PNG のテクスチャファイルを読むためだけに使っています．
 libpng や glpng を使うことも考えたのですが，めんどくさくなりました．
-
-    Oculus SDK 0.8 に対応して DK2 も使えるようにしました．
 
 ### Windows
 「プロジェクトのプロパティ」の「構成プロパティ」で，
